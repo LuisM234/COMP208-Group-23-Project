@@ -1,0 +1,10 @@
+[project]
+name = "flashcards-api"
+version = "0.1.0"
+description = "The backend for the flashcards project."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi[standard]>=0.131.0",
+    "orjson>=3.11.7",
+]
