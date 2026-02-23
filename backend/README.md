@@ -31,7 +31,8 @@ uv remove <package name>
 Make sure you commit both:
 - `pyproject.toml` 
 - `uv.lock`
-and push them.
+
+and **push** them.
 
 #### After pulling changes via `git pull`
 If you notice `pyproject.toml` & `uv.lock` being updated, run:
