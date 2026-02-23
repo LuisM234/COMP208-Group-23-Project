@@ -27,9 +27,18 @@ And run this to remove:
 ```bash
 uv remove <package name>
 ```
-After you're happy with whatever you just installed, **make sure you commit AND push both `pyproject.toml` & `uv.lock` for other contributors.**
+#### After changing dependencies 
+Make sure you commit both:
+- `pyproject.toml` 
+- `uv.lock`
+and push them.
 
-And if you notice `pyproject.toml` & `uv.lock` being updated, run `uv sync` immediately to keep your packages up to date.
+#### After pulling changes via `git pull`
+If you notice `pyproject.toml` & `uv.lock` being updated, run:
+```bash
+uv sync
+``` 
+to keep your environment up to date.
 
 ### Running the backend API
 To test your changes it's ideal to use the development way.
@@ -65,7 +74,17 @@ async def get_deck_cards():
 async def delete_deck():
     ...
 ```
-The endpoints would look like this: "<backend link>/deck/cards"
+The endpoints would look like this: `"<backend link>/deck/cards"`
+
+> [!IMPORTANT]
+> Make sure to add new routes into the `main.py` file like so:
+>
+> ```py
+> # import your route here
+> from routes.ai import ai_route
+>
+> # include the router
+> app.include_router(ai_route)
 
 If this makes 0 sense, refer to these docs about FastAPI: https://fastapi.tiangolo.com/tutorial/bigger-applications/#another-module-with-apirouter
 
