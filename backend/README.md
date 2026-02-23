@@ -29,6 +29,8 @@ uv remove <package name>
 ```
 After you're happy with whatever you just installed, **make sure you commit AND push both `pyproject.toml` & `uv.lock` for other contributors.**
 
+And if you notice `pyproject.toml` & `uv.lock` being updated, run `uv sync` immediately to keep your packages up to date.
+
 ### Running the backend API
 To test your changes it's ideal to use the development way.
 
@@ -71,5 +73,7 @@ And probably have a look around the different sections of the library (or ask AI
 
 ### How to use the database
 Database stuff coming soon, once we figure out how to implement it.
+
 Ideally we (Treasure, Charles) were thinking to use a cloud database, such as [TIDB](https://www.pingcap.com/).
+
 We can host the backend on our machines, and have the database in the cloud so we don't have to worry about hosting the entire system anywhere. This is subject to change if anyone has any other ideas.
