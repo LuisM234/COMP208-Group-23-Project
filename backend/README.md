@@ -7,14 +7,16 @@
 ## Development
 ### Setting up access to the repo
 Because the repo is **private**, you may need to setup a **PAT** (Personal Access Token) or an **SSH key** for your GitHub account.
+
 The *recommended* way is to use **SSH keys**, so you don't have to deal with applying tokens.
+
 You may follow this tutorial by GitHub here:
 https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent
 https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account
 
 Once you've done the SSH key setup, try to do `ssh -T git@github.com` in your terminal and see if something like this gets returned:
 ```sh
-ubuntu@jar-wls:~$ ssh -T git@github.com
+jarad@JacBook-Air ~ % ssh -T git@github.com
 Hi jvrring! You've successfully authenticated, but GitHub does not provide shell access.
 ```
 
@@ -90,20 +92,20 @@ Create a new `.py` file with a reasonable name and use this as a base (just an e
 ```py
 from fastapi import APIRouter
 
-deck_route = APIRouter(prefix="/deck", tags=["Deck"])
+decks_route = APIRouter(prefix="/deck", tags=["Deck"])
 ```
 
 and then create new **path operation decorators** with that specified router.
 ```py
-@deck_route.get("/cards")
+@decks_route.get("/cards")
 async def get_deck_cards():
     ...
 
-@deck_route.post("/delete")
+@decks_route.post("/delete")
 async def delete_deck():
     ...
 ```
-The endpoints would look like this: `"<backend link>/deck/cards"`
+The endpoints would look like this: `"<backend link>/decks/cards"`
 
 > [!IMPORTANT]
 > Make sure to add new routes into the `main.py` file like so:
