@@ -7,4 +7,5 @@ requires-python = ">=3.11"
 dependencies = [
     "fastapi[standard]>=0.131.0",
     "orjson>=3.11.7",
+    "python-dotenv>=1.2.1",
 ]
