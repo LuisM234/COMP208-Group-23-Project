@@ -10,15 +10,16 @@ Because the repo is **private**, you may need to setup a **PAT** (Personal Acces
 
 The *recommended* way is to use **SSH keys**, so you don't have to deal with applying tokens.
 
-You may follow this tutorial by GitHub here:
-https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent
-https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account
+You may follow this tutorial by GitHub here (or watch a video):
+- [Generating an SSH key](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)
+- [Adding an SSH key to your account](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)
 
 Once you've done the SSH key setup, try to do `ssh -T git@github.com` in your terminal and see if something like this gets returned:
 ```sh
 jarad@JacBook-Air ~ % ssh -T git@github.com
 Hi jvrring! You've successfully authenticated, but GitHub does not provide shell access.
 ```
+This indicates that you're ready to go.
 
 ### Cloning the repo
 If you followed the SSH key setup, you can use this in your terminal to clone the repo:
