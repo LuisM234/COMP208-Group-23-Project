@@ -5,10 +5,38 @@
 </p>
 
 ## Development
+### Setting up access to the repo
+Because the repo is **private**, you may need to setup a **PAT** (Personal Access Token) or an **SSH key** for your GitHub account.
+The *recommended* way is to use **SSH keys**, so you don't have to deal with applying tokens.
+You may follow this tutorial by GitHub here:
+https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent
+https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account
+
+Once you've done the SSH key setup, try to do `ssh -T git@github.com` in your terminal and see if something like this gets returned:
+```sh
+ubuntu@jar-wls:~$ ssh -T git@github.com
+Hi jvrring! You've successfully authenticated, but GitHub does not provide shell access.
+```
+
+### Cloning the repo
+If you followed the SSH key setup, you can use this in your terminal to clone the repo:
+```bash
+git clone git@github.com:LuisM234/COMP208-Group-23-Project.git
+# Go into the group project folder
+cd COMP208-Group-23-Project
+```
+
+> [!IMPORTANT]
+> Make sure you're in the **backend** folder, otherwise the rest of this will not work!
+> ```bash
+> jarad@JacBook-Air COMP208-Group-23-Project % cd backend
+> jarad@JacBook-Air backend % _
+> ```
+
 ### Prerequisites
 - `uv` (https://docs.astral.sh/uv/getting-started/installation/)
 
-Assuming you've already installed `uv`, run the following command to:
+Assuming you've already installed `uv`, run the following command in your terminal to:
 - install Python if you haven't already
 - install all the packages needed for the backend
 - create a virtual environment for easier management over packages.
@@ -18,12 +46,12 @@ uv sync
 ```
 
 ### Adding and removing a new package/library
-Simply run this to add:
+Simply run this in your terminal to add:
 ```bash
 uv add <package name>
 ```
 
-And run this to remove:
+And run this in your terminal to remove:
 ```bash
 uv remove <package name>
 ```
@@ -35,7 +63,7 @@ Make sure you commit both:
 and **push** them.
 
 #### After pulling changes via `git pull`
-If you notice `pyproject.toml` & `uv.lock` being updated, run:
+If you notice `pyproject.toml` & `uv.lock` being updated, run this in your terminal:
 ```bash
 uv sync
 ``` 
@@ -51,7 +79,7 @@ uv run fastapi dev
 ```
 
 #### Production
-We don't need to do this now, but when the time comes you run the following (also in the backend folder):
+We don't need to do this for now, but when the time comes you run the following (also in the backend folder):
 ```bash
 uv run fastapi run
 ```
