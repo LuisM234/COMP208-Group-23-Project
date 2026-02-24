@@ -87,6 +87,17 @@ We don't need to do this for now, but when the time comes you run the following 
 uv run fastapi run
 ```
 
+### Shutting down the API
+Once you're done testing your changes or whatever, press `CTRL+C` in your terminal to shut it down.
+The output should look somewhat similar to this:
+```bash
+INFO   Shutting down
+INFO   Waiting for application shutdown.
+INFO   Application shutdown complete.
+INFO   Finished server process [98462]
+INFO   Stopping reloader process [97957]
+```
+
 ### Understanding backend structure
 All routes like `/deck` or `/ai` go under the `routes/` folder.
 Create a new `.py` file with a reasonable name and use this as a base (just an example):
