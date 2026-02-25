@@ -5,7 +5,9 @@ description = "The backend for the flashcards project."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "asyncmy>=0.2.10",
     "fastapi[standard]>=0.131.0",
     "orjson>=3.11.7",
     "python-dotenv>=1.2.1",
+    "tortoise-orm>=0.25.1",
 ]
