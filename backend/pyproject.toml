@@ -5,7 +5,10 @@ description = "The backend for the flashcards project."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "aiohttp>=3.13.3",
+    "asyncmy>=0.2.11",
     "fastapi[standard]>=0.131.0",
+    "google-genai>=1.65.0",
     "orjson>=3.11.7",
     "python-dotenv>=1.2.1",
     # asyncmy is included in the tortoise install
