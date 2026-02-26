@@ -81,7 +81,7 @@ class GeminiWrapper:
         # from none is used to cleanup the traceback of previosu internal errors
         # then a standard exception for catching all other unexpected issues, so app doesn't crash silently
         except errors.APIError as exc:
-            code = getattr(exc, "code", None)
+            code = exc.code
             if code == status.HTTP_429_TOO_MANY_REQUESTS:
                 raise HTTPException(
                     status_code=status.HTTP_429_TOO_MANY_REQUESTS,
