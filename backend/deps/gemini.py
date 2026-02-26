@@ -42,7 +42,7 @@ class GeminiWrapper:
 
     async def generate_flashcards(
         self, notes: str, num_cards: int
-    ) -> list[dict[str, str]]:
+    ) -> list[Flashcard]:
         """Generates flashcards from notes using Gemini API."""
         config = types.GenerateContentConfig(
             system_instruction=f"You generate study flashcards from notes. Return exactly {num_cards} items.",
@@ -116,7 +116,7 @@ class GeminiWrapper:
             )
 
         parsed_cards = cast(list[Flashcard], response.parsed)
-        return [card.model_dump() for card in parsed_cards]
+        return parsed_cards
 
 
 # a depenency function to show the gemin wrapper
