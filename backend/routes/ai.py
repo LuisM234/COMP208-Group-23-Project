@@ -1,7 +1,10 @@
+import os
+from urllib import response
+
 import orjson
 import asyncio
 from typing import Any, Literal
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import ORJSONResponse
 from pydantic import BaseModel, Field, model_validator
 from google import genai
@@ -171,7 +174,7 @@ class GenerateCardsRequest(BaseModel):
             self,
             api_key: str,
             model: str = "gemini-3.0-flash",
-            api_version: str = "v1alpha",
+            api_version: str = "v1",
         ):
             self.api_key = api_key
             self.model = model
@@ -223,7 +226,7 @@ NOTES:
             # 429 for checking if you have exceeded your rate limit, if hit raises and error for end user to see
             #from none is used to cleanup the traceback of previosu internal errors
             # then a standard exception for catching all other unexpected issues, so app doesn't crash silently 
-            
+
 
             except errors.APIError as exc:
                 code = getattr(exc, "code", None)
@@ -241,4 +244,68 @@ NOTES:
                     status_code=status.HTTP_502_BAD_GATEWAY,
                     detail="Failed to contact Gemini",
                 ) from None
+            
+
+            # tries to get text from response, returns none if doesn't exist
+            # checks if text is missing, not a string or contains only whitespaces
+            # check the nested structure ( candidates -> f candidate -> f part -> text)
+            # if manual fails the response fails, the response is invalid or unexpected
+            # the none gets rid of the traceback of caught exception 
+            model_text = getattr(response, "text", None)
+            if not isinstance(model_text, str) or not model_text.strip():
+                try:
+                    model_text = response.candidates[0].content.parts[0].text
+                except( AttributeError, IndexError, KeyError, TypeError):
+                    raise HTTPException(
+                        status_code=status.HTTP_502_BAD_GATEWAY,
+                        detail="Not expected response from Gemini",
+                    ) from None
+        
+
+
+
+        # a depenency function to show the gemin wrapper 
+        # checks if the api for two environment variable names
+        # if no key is found, so server will not work, so raise a 500 server error,
+        # gets model ( not decided), providing defaults if are not set. 
+        # then finally returns the isntance of Gemini wrapper class
+        def get_gemini_wrapper() -> GeminiWrapper:
+            api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+            if not api_key:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Gemini API key not configured",
+                )
+            model = os.getenv("GEMINI_MODEL", "gemini-3.0-flash")
+            api_version = os.getenv("GEMINI_API_VERSION", "v1")
+            return GeminiWrapper(api_key=api_key, model=model, api_version=api_version)
+        
+        # initalises a router for ai tasks, with url prefix (/ai) 
+        ai_route = APIRouter(prefix="/ai", tags=["AI"])
+
+        # defines a POST endpoint at /generate-cards
+        # validates incoming JSON againts GenerateCardsRequest schema
+        # ensures the user is logged in ( this would be the dependency injection) 
+        # mo will fix orjson respones stuff
+        # after the actual generation logic of teh flashcards
+        ai_route.post("/generate-cards")
+        async def generate_cards(
+                cards_request: GenerateCardsRequest,
+                current_user: Any = Depends(get_current_user),
+                gemini: GeminiWrapper = Depends(get_gemini_wrapper),
+        ) -> ORJSONResponse:            """Generate flashcards from notes or a deck using Gemini.
+
+            Request Body:
+            - **notes** (`str | None`)
+            Raw notes to generate flashcards from. Required if `deck_id` is not provided.
+
+            - **deck_id** (`int | None`)
+            ID of the deck whose cards will be used as input. Required if `notes` is not provided.
+
+            - **num_cards** (`int`, default=5)
+            Number of flashcards to generate.
+            """
+        
+
+          
         
