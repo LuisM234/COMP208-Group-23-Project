@@ -43,7 +43,20 @@ class GeminiWrapper:
     async def generate_flashcards(
         self, notes: str, num_cards: int
     ) -> list[Flashcard]:
-        """Generates flashcards from notes using Gemini API."""
+        """Generates flashcards from notes using Gemini API.
+        
+        Parameters
+        ----------
+        notes : str
+            The raw notes to generate flashcards from.
+        num_cards : int
+            The number of flashcards to generate.
+            
+        Returns
+        -------
+        list[Flashcard]
+            A list of generated flashcards. Each flashcard contains a question and an answer.
+        """
         config = types.GenerateContentConfig(
             system_instruction=f"You generate study flashcards from notes. Return exactly {num_cards} items.",
             temperature=0.3,
