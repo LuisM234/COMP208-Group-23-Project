@@ -7,7 +7,13 @@ from tortoise.backends.base.client import BaseDBAsyncClient
 from tortoise.exceptions import IntegrityError
 from tortoise.transactions import in_transaction
 
-from deps.database import Card, DailyActivity, DeckDailyActivity, ReviewEvent, StudyProgress
+from deps.database import (
+    Card,
+    DailyActivity,
+    DeckDailyActivity,
+    ReviewEvent,
+    StudyProgress,
+)
 
 # Days to wait before the next review for each Leitner box.
 BOX_INTERVAL_DAYS: dict[int, int] = {

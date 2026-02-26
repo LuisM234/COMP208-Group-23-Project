@@ -10,10 +10,12 @@ app = FastAPI(
     default_response_class=ORJSONResponse,
 )
 
+
 # send to docs if root is accessed
 @app.get("/")
 async def root():
     return RedirectResponse(url="/docs")
+
 
 app.include_router(ai_route)
 app.include_router(decks_route)
