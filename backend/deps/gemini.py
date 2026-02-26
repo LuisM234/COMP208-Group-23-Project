@@ -1,9 +1,17 @@
 import os
+from typing import cast
 
-import orjson
 from fastapi import HTTPException, status
 from google import genai
 from google.genai import errors, types
+from pydantic import BaseModel
+
+
+class Flashcard(BaseModel):
+    """Model for a flashcard with a question and answer."""
+
+    question: str
+    answer: str
 
 
 class GeminiWrapper:
@@ -36,21 +44,11 @@ class GeminiWrapper:
         self, notes: str, num_cards: int
     ) -> list[dict[str, str]]:
         """Generates flashcards from notes using Gemini API."""
-        prompt = f"""
-            You generate study flashcards from notes.
-            Return ONLY a JSON array with exactly {num_cards} items.
-            Each item must be an object with:
-            - "question"
-            - "answer"
-
-
-            NOTES:
-            {notes}
-        """.strip()
-
         config = types.GenerateContentConfig(
+            system_instruction=f"You generate study flashcards from notes. Return exactly {num_cards} items.",
             temperature=0.3,
             response_mime_type="application/json",
+            response_schema=list[Flashcard],
         )
         # makes a config object for model, and chooses a temp ( randomness level) make it more deterministic and focused for flashcards
         # explicitly tells gemini to return the data in valid JSON format
@@ -72,7 +70,7 @@ class GeminiWrapper:
             ).aio as aclient:
                 response = await aclient.models.generate_content(
                     model=self.model,
-                    contents=prompt,
+                    contents=notes,
                     config=config,
                 )
         # catches errors by googles servers
@@ -110,22 +108,16 @@ class GeminiWrapper:
                 status_code=status.HTTP_502_BAD_GATEWAY,
                 detail="Not expected response from Gemini",
             )
-            
-        try:
-            flashcards = orjson.loads(model_text)
-        except orjson.JSONDecodeError:
+
+        if not response.parsed:
             raise HTTPException(
                 status_code=status.HTTP_502_BAD_GATEWAY,
-                detail="Gemini did not return valid JSON",
-            ) from None
-            
-        if not isinstance(flashcards, list):
-            raise HTTPException(
-                status_code=status.HTTP_502_BAD_GATEWAY,
-                detail="Gemini did not return a JSON array",
+                detail="Gemini response is not valid JSON",
             )
-            
-        return flashcards
+
+        parsed_cards = cast(list[Flashcard], response.parsed)
+        return [card.model_dump() for card in parsed_cards]
+
 
 # a depenency function to show the gemin wrapper
 # checks if the api for two environment variable names
