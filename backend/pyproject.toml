@@ -8,10 +8,9 @@ dependencies = [
     "aiohttp>=3.13.3",
     "asyncmy>=0.2.11",
     "fastapi[standard]>=0.131.0",
-    "google-genai>=1.65.0",
+    "google-genai[aiohttp]>=1.65.0",
     "orjson>=3.11.7",
     "python-dotenv>=1.2.1",
-    # asyncmy is included in the tortoise install
     "tortoise-orm[asyncmy]>=1.1.5",
 ]
 
@@ -20,3 +19,9 @@ dependencies = [
 dev = [
     "ruff>=0.15.2",
 ]
+
+# this is for ty users only
+# nothing should be misconfigured
+[tool.ty.environment]
+root = ["."]
+python = ".venv"

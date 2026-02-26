@@ -645,7 +645,7 @@ dependencies = [
     { name = "aiohttp" },
     { name = "asyncmy" },
     { name = "fastapi", extra = ["standard"] },
-    { name = "google-genai" },
+    { name = "google-genai", extra = ["aiohttp"] },
     { name = "orjson" },
     { name = "python-dotenv" },
     { name = "tortoise-orm", extra = ["asyncmy"] },
@@ -661,7 +661,7 @@ requires-dist = [
     { name = "aiohttp", specifier = ">=3.13.3" },
     { name = "asyncmy", specifier = ">=0.2.11" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.131.0" },
-    { name = "google-genai", specifier = ">=1.65.0" },
+    { name = "google-genai", extras = ["aiohttp"], specifier = ">=1.65.0" },
     { name = "orjson", specifier = ">=3.11.7" },
     { name = "python-dotenv", specifier = ">=1.2.1" },
     { name = "tortoise-orm", extras = ["asyncmy"], specifier = ">=1.1.5" },
@@ -813,6 +813,11 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/79/f9/cc1191c2540d6a4e24609a586c4ed45d2db57cfef47931c139ee70e5874a/google_genai-1.65.0.tar.gz", hash = "sha256:d470eb600af802d58a79c7f13342d9ea0d05d965007cae8f76c7adff3d7a4750", size = 497206, upload-time = "2026-02-26T00:20:33.824Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/68/3c/3fea4e7c91357c71782d7dcaad7a2577d636c90317e003386893c25bc62c/google_genai-1.65.0-py3-none-any.whl", hash = "sha256:68c025205856919bc03edb0155c11b4b833810b7ce17ad4b7a9eeba5158f6c44", size = 724429, upload-time = "2026-02-26T00:20:32.186Z" },
+]
+
+[package.optional-dependencies]
+aiohttp = [
+    { name = "aiohttp" },
 ]
 
 [[package]]
