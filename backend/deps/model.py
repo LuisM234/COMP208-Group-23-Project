@@ -6,10 +6,9 @@ from tortoise.contrib.fastapi import register_tortoise
 
 load_dotenv()
 
-# Tortoise connection URL examples:
+# Tortoise connection URL example:
 # - TiDB/MySQL: mysql://USER:PASSWORD@HOST:4000/DB_NAME?charset=utf8mb4
-# - SQLite (local fallback): sqlite://./flashcards.db
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite://./flashcards.db")
+DATABASE_URL = os.environ["DATABASE_URL"]
 
 TORTOISE_ORM = {
     "connections": {"default": DATABASE_URL},
