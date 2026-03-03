@@ -6,29 +6,54 @@ from datetime import datetime, timezone
 from tortoise import Model, fields
 from tortoise.fields import ForeignKeyRelation, OneToOneRelation, ReverseRelation
 
-# Central schema file for the backend.
-# Keep every table here so migrations are generated from one module.
-# All timestamps are stored in UTC.
+# Database schema for the flashcard application.
+
+# Tables:
+#   users, user_settings          – accounts & preferences
+#   decks, cards, mcq_questions   – content
+#   study_progress                – Leitner scheduling state
+#   daily_activity, deck_daily_activity – aggregated analytics
+#   review_events                 – per-review analytics (source of truth)
+#   ai_generation_runs            – AI generation audit log
 
 
 def utc_now() -> datetime:
-    # Consistent UTC timestamp default for datetime fields.
+    """Return the current moment in UTC."""
     return datetime.now(timezone.utc)
 
 
 def utc_today() -> date_type:
-    # UTC date default for daily aggregate rows.
+    """Return today's date in UTC."""
     return utc_now().date()
 
 
+# ------------------------------------------------------------------
+# Valid value sets (used for application-level validation)
+# ------------------------------------------------------------------
+
+VALID_LAST_RESULTS = {"new", "correct", "wrong"}
+VALID_CORRECT_ANSWERS = {"A", "B", "C", "D"}
+VALID_WEEK_DAYS = {"MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"}
+VALID_GENERATION_KINDS = {"flashcards", "mcq"}
+VALID_INPUT_TYPES = {"notes", "deck"}
+VALID_GENERATION_STATUSES = {"pending", "success", "failed", "rate_limited", "invalid_json"}
+
+
+# ---------------------------------------------------------------
+# Core entities
+# ---------------------------------------------------------------
+
+
 class User(Model):
-    # Login identity. A user owns decks, settings, study progress, and analytics rows.
+    """User accounts."""
+
     id = fields.IntField(pk=True)
     username = fields.CharField(max_length=50, unique=True, index=True)
     email = fields.CharField(max_length=255, unique=True, index=True)
     password_hash = fields.CharField(max_length=255)
     created_at = fields.DatetimeField(default=utc_now)
 
+    # Reverse relations
     settings: OneToOneRelation["UserSettings"]
     decks: ReverseRelation["Deck"]
     daily_activities: ReverseRelation["DailyActivity"]
@@ -45,10 +70,12 @@ class User(Model):
 
 
 class Deck(Model):
-    # Named collection of cards owned by one user.
+    """Flashcard decks owned by a user."""
+
     id = fields.IntField(pk=True)
     title = fields.CharField(max_length=255)
-    description = fields.TextField(null=True)
+    # Empty string instead of NULL to avoid None-vs-"" ambiguity.
+    description = fields.TextField(default="")
     created_at = fields.DatetimeField(default=utc_now)
     user: ForeignKeyRelation[User] = fields.ForeignKeyField(
         "models.User",
@@ -56,6 +83,7 @@ class Deck(Model):
         on_delete=fields.CASCADE,
     )
 
+    # Reverse relations
     cards: ReverseRelation["Card"]
     mcq_questions: ReverseRelation["MCQQuestion"]
     daily_activity_entries: ReverseRelation["DeckDailyActivity"]
@@ -70,7 +98,8 @@ class Deck(Model):
 
 
 class Card(Model):
-    # One flashcard (question/answer) inside a deck.
+    """Individual flashcards belonging to a deck."""
+
     id = fields.IntField(pk=True)
     question = fields.TextField()
     answer = fields.TextField()
@@ -81,7 +110,7 @@ class Card(Model):
         related_name="cards",
         on_delete=fields.CASCADE,
     )
-    # Set only when card was created by the AI generation flow.
+    # NULL for manually-created cards (no associated AI run).
     generation_run: ForeignKeyRelation["AIGenerationRun"] = fields.ForeignKeyField(
         "models.AIGenerationRun",
         related_name="generated_cards",
@@ -89,6 +118,7 @@ class Card(Model):
         null=True,
     )
 
+    # Reverse relations
     study_progress_entries: ReverseRelation["StudyProgress"]
     review_events: ReverseRelation["ReviewEvent"]
 
@@ -99,16 +129,22 @@ class Card(Model):
         return f"Card(id={self.id}, question={self.question[:40]!r})"
 
 
+# ---------------------------------------------------------------
+# Study scheduling (Leitner system)
+# ---------------------------------------------------------------
+
+
 class StudyProgress(Model):
-    # Leitner state for one user + one card.
-    # This drives due-card queries and review scheduling.
+    """Leitner scheduling state for each (user, card) pair."""
+
     id = fields.IntField(pk=True)
     box = fields.IntField(default=1)
     next_review = fields.DatetimeField(index=True)
     last_reviewed = fields.DatetimeField(null=True)
+    updated_at = fields.DatetimeField(auto_now=True)
     lapse_count = fields.IntField(default=0)
     streak = fields.IntField(default=0)
-    # Last outcome stored as text for quick UI/analytics reads.
+    # Allowed values: new | correct | wrong  (validated in service layer)
     last_result = fields.CharField(max_length=16, default="new")
     user: ForeignKeyRelation[User] = fields.ForeignKeyField(
         "models.User",
@@ -119,6 +155,7 @@ class StudyProgress(Model):
         "models.Card",
         related_name="study_progress_entries",
         on_delete=fields.CASCADE,
+        index=True,  # Allows efficient lookup of all progress rows for a card
     )
 
     class Meta:
@@ -130,18 +167,24 @@ class StudyProgress(Model):
         return f"StudyProgress(id={self.id}, user_id={self.user_id}, card_id={self.card_id})"
 
 
+# --------------------------------------------------------------
+# Content – MCQ questions
+# --------------------------------------------------------------
+
+
 class MCQQuestion(Model):
-    # One generated MCQ row tied to a deck.
-    # Options are stored as four fixed columns for simpler reads.
+    """AI-generated multiple-choice questions linked to a deck."""
+
     id = fields.IntField(pk=True)
     question = fields.TextField()
     option_a = fields.TextField()
     option_b = fields.TextField()
     option_c = fields.TextField()
     option_d = fields.TextField()
+    # Must be one of A, B, C, D (validated in service layer).
     correct_answer = fields.CharField(max_length=1)
     explanation = fields.TextField(null=True)
-    # Difficulty is optional and comes from the generation request.
+    # Optional difficulty label from the generation request.
     difficulty = fields.CharField(max_length=16, null=True)
     created_at = fields.DatetimeField(default=utc_now)
     deck: ForeignKeyRelation[Deck] = fields.ForeignKeyField(
@@ -149,7 +192,7 @@ class MCQQuestion(Model):
         related_name="mcq_questions",
         on_delete=fields.CASCADE,
     )
-    # Set only when this MCQ came from an AI generation run.
+    # NULL when MCQs are seeded/imported outside an AI run.
     generation_run: ForeignKeyRelation["AIGenerationRun"] = fields.ForeignKeyField(
         "models.AIGenerationRun",
         related_name="generated_mcqs",
@@ -168,9 +211,14 @@ class MCQQuestion(Model):
         return f"MCQQuestion(id={self.id}, question={self.question[:40]!r})"
 
 
+# -------------------------------------------------------------------
+# Analytics – daily aggregates
+# -------------------------------------------------------------------
+
+
 class DailyActivity(Model):
-    # Per-user daily totals across all decks.
-    # Used for week/month line charts.
+    """Per-user daily review totals across all decks."""
+
     id = fields.IntField(pk=True)
     date = fields.DateField(default=utc_today)
     cards_reviewed = fields.IntField(default=0)
@@ -183,16 +231,17 @@ class DailyActivity(Model):
 
     class Meta:
         table = "daily_activity"
+        # unique_together already creates a composite index on (user, date),
+        # so no separate indexes entry is needed.
         unique_together = (("user", "date"),)
-        indexes = (("user", "date"),)
 
     def __str__(self) -> str:
         return f"DailyActivity(id={self.id}, date={self.date.isoformat()})"
 
 
 class DeckDailyActivity(Model):
-    # Same daily totals as DailyActivity, split by deck.
-    # Used for "deck breakdown" below analytics charts.
+    """Per-user, per-deck daily review totals."""
+
     id = fields.IntField(pk=True)
     date = fields.DateField(default=utc_today)
     cards_reviewed = fields.IntField(default=0)
@@ -210,11 +259,10 @@ class DeckDailyActivity(Model):
 
     class Meta:
         table = "deck_daily_activity"
+        # unique_together already creates an index on (user, deck, date).
+        # Only the (user, date) index is added since it's a different column set.
         unique_together = (("user", "deck", "date"),)
-        indexes = (
-            ("user", "date"),
-            ("user", "deck", "date"),
-        )
+        indexes = (("user", "date"),)
 
     def __str__(self) -> str:
         return (
@@ -223,14 +271,21 @@ class DeckDailyActivity(Model):
         )
 
 
+# ----------------------------------------------------------------
+# Analytics – individual review events (source of truth)
+# ----------------------------------------------------------------
+
+
 class ReviewEvent(Model):
-    # Immutable log of every review action.
-    # This is the source-of-truth table for detailed analytics.
+    """One row per review attempt – the analytics source of truth."""
+
     id = fields.IntField(pk=True)
     reviewed_at = fields.DatetimeField(default=utc_now, index=True)
     correct = fields.BooleanField()
     old_box = fields.IntField()
     new_box = fields.IntField()
+    # Client-reported response time; NULL when not available.
+    # Validate >= 0 in the service layer.
     response_time_ms = fields.IntField(null=True)
     user: ForeignKeyRelation[User] = fields.ForeignKeyField(
         "models.User",
@@ -263,8 +318,14 @@ class ReviewEvent(Model):
         )
 
 
+# ---------------------------------------------------------------------------
+# User preferences
+# ---------------------------------------------------------------------------
+
+
 class UserSettings(Model):
-    # Per-user preferences for study flow and analytics display.
+    """Per-user study and analytics preferences."""
+
     id = fields.IntField(pk=True)
     user: OneToOneRelation[User] = fields.OneToOneField(
         "models.User",
@@ -275,6 +336,7 @@ class UserSettings(Model):
     review_batch_size = fields.IntField(default=20)
     new_cards_per_session = fields.IntField(default=5)
     daily_goal = fields.IntField(default=20)
+    # Must be one of MON, TUE, WED, THU, FRI, SAT, SUN (validated in service layer).
     week_start_day = fields.CharField(max_length=3, default="MON")
 
     class Meta:
@@ -287,19 +349,24 @@ class UserSettings(Model):
         )
 
 
+# -------------------------------------------------------------
+# AI generation audit log
+# -------------------------------------------------------------
+
+
 class AIGenerationRun(Model):
-    # One Gemini request record.
-    # Stores status, errors, and counts so failures are traceable.
+    """Audit record for a single AI generation request and its outcome."""
+
     id = fields.IntField(pk=True)
-    # Expected values: flashcards | mcq
+    # Allowed values: flashcards | mcq  (validated in service layer)
     kind = fields.CharField(max_length=24)
-    # Expected values: notes | deck
+    # Allowed values: notes | deck  (validated in service layer)
     input_type = fields.CharField(max_length=16)
     requested_count = fields.IntField()
     created_count = fields.IntField(default=0)
     difficulty = fields.CharField(max_length=16, null=True)
     model_name = fields.CharField(max_length=64, default="gemini")
-    # Typical values: pending | success | failed | rate_limited | invalid_json
+    # Allowed values: pending | success | failed | rate_limited | invalid_json
     status = fields.CharField(max_length=24, default="pending")
     error_code = fields.CharField(max_length=64, null=True)
     error_message = fields.TextField(null=True)
@@ -318,6 +385,7 @@ class AIGenerationRun(Model):
         null=True,
     )
 
+    # Reverse relations
     generated_cards: ReverseRelation[Card]
     generated_mcqs: ReverseRelation[MCQQuestion]
 
