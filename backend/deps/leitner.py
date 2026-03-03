@@ -706,12 +706,20 @@ async def reset_deck_progress(
     """Reset all progress for a deck back to box 1. Returns the number of
     cards reset."""
     now = as_of or utc_now()
-    count = await StudyProgress.filter(
+
+    # Two-step query: fetch IDs first, then update by primary key.
+    # A single .filter(card__deck_id=...).update() generates an UPDATE JOIN
+    # which SQLite cannot handle.
+    progress_ids = await StudyProgress.filter(
         user_id=user_id, card__deck_id=deck_id
-    ).update(
+    ).values_list("id", flat=True)
+
+    if not progress_ids:
+        return 0
+
+    return await StudyProgress.filter(id__in=progress_ids).update(
         box=MIN_BOX,
         next_review=now,
         streak=0,
         last_result="new",
     )
-    return count
