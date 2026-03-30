@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Request, Depends
 from deps.gemini import GeminiWrapper, get_gemini_wrapper
 from fastapi.responses import ORJSONResponse
 from pydantic import BaseModel, Field, model_validator
-
+from deps.security import get_current_user
 
 class MCQRequest(BaseModel):
     """Body model for the /generate-mcq endpoint."""
