@@ -4,6 +4,7 @@ from routes.ai import ai_route
 from routes.decks import decks_route
 from deps.model import register_database
 from routes.auth import router as auth_route
+from routes.analytics import router as analytics_route
 
 app = FastAPI(
     title="Flashcards API",
@@ -22,3 +23,4 @@ async def root():
 app.include_router(ai_route)
 app.include_router(decks_route)
 app.include_router(auth_route, prefix="/auth", tags=["Auth"])
+app.include_router(analytics_route)
