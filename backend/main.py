@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse, RedirectResponse
 from routes.ai import ai_route
 from routes.decks import decks_route
+from routes.cards import deck_cards_route, cards_route
 from deps.model import register_database
 from routes.auth import router as auth_route
 from routes.analytics import router as analytics_route
@@ -22,5 +23,7 @@ async def root():
 
 app.include_router(ai_route)
 app.include_router(decks_route)
+app.include_router(deck_cards_route)   # POST/GET /decks/{deck_id}/cards
+app.include_router(cards_route)        # GET/PUT/DELETE /cards/{card_id}
 app.include_router(auth_route, prefix="/auth", tags=["Auth"])
 app.include_router(analytics_route)
