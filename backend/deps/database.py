@@ -111,7 +111,7 @@ class Card(Model):
         on_delete=fields.CASCADE,
     )
     # NULL for manually-created cards (no associated AI run).
-    generation_run: ForeignKeyRelation["AIGenerationRun"] = fields.ForeignKeyField(
+    generation_run: ForeignKeyRelation["AIGenerationRun"] | None = fields.ForeignKeyField(
         "models.AIGenerationRun",
         related_name="generated_cards",
         on_delete=fields.SET_NULL,
@@ -193,7 +193,7 @@ class MCQQuestion(Model):
         on_delete=fields.CASCADE,
     )
     # NULL when MCQs are seeded/imported outside an AI run.
-    generation_run: ForeignKeyRelation["AIGenerationRun"] = fields.ForeignKeyField(
+    generation_run: ForeignKeyRelation["AIGenerationRun"] | None = fields.ForeignKeyField(
         "models.AIGenerationRun",
         related_name="generated_mcqs",
         on_delete=fields.SET_NULL,
@@ -378,7 +378,7 @@ class AIGenerationRun(Model):
         related_name="generation_runs",
         on_delete=fields.CASCADE,
     )
-    deck: ForeignKeyRelation[Deck] = fields.ForeignKeyField(
+    deck: ForeignKeyRelation[Deck] | None = fields.ForeignKeyField(
         "models.Deck",
         related_name="generation_runs",
         on_delete=fields.CASCADE,
