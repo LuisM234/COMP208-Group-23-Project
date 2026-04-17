@@ -12,6 +12,14 @@ class Flashcard(BaseModel):
 
     question: str
     answer: str
+    
+class MCQQuestion(BaseModel):
+    """Model for a multiple-choice question with options and the correct answer."""
+
+    question: str
+    options: list[str]
+    correct_answer: str
+    explanation: str
 
 
 class GeminiWrapper:
@@ -130,6 +138,84 @@ class GeminiWrapper:
 
         parsed_cards = cast(list[Flashcard], response.parsed)
         return parsed_cards
+    
+    async def generate_mcq_questions(
+        self,
+        notes: str,
+        num_questions: int,
+        difficulty: str,
+    ) -> list[MCQQuestion]:
+        """Generates multiple-choice questions from notes using Gemini API.
+        
+        Parameters
+        ----------
+        notes : str
+            The raw notes to generate questions from.
+        num_questions : int
+            The number of questions to generate.
+        difficulty : str
+            The difficulty level of the questions (e.g., "easy", "medium", "hard").
+        """
+        config = types.GenerateContentConfig(
+            system_instruction=(
+                f"You generate exam-style multiple choice questions from notes. "
+                f"Return exactly {num_questions} items. "
+                f"Difficulty level: {difficulty}."
+            ),
+            temperature=0.3,
+            response_mime_type="application/json",
+            response_schema=list[MCQQuestion],
+        )
+
+        http_options = types.HttpOptions(
+            api_version=self.api_version,
+            async_client_args={},
+        )
+
+        try:
+            async with genai.Client(
+                api_key=self.api_key,
+                http_options=http_options,
+            ).aio as aclient:
+                response = await aclient.models.generate_content(
+                    model=self.model,
+                    contents=notes,
+                    config=config,
+                )
+        except errors.APIError as exc:
+            code = exc.code
+            if code == status.HTTP_429_TOO_MANY_REQUESTS:
+                raise HTTPException(
+                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                    detail="Gemini rate limit exceeded",
+                ) from None
+
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"Gemini error ({code})",
+            ) from None
+
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Failed to contact Gemini",
+            ) from None
+
+        model_text = response.text
+        if not model_text or not model_text.strip():
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Not expected response from Gemini",
+            )
+
+        if not response.parsed:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Gemini response is not valid JSON",
+            ) from None
+
+        parsed = cast(list[MCQQuestion], response.parsed)
+        return parsed
 
 
 # a depenency function to show the gemin wrapper
