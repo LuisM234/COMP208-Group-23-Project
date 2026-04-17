@@ -75,15 +75,7 @@ class GenerateCardsRequest(BaseModel):
             raise ValueError("provide deck_id")
         return self
 
-    # cant do this now according to big mo
-    async def get_current_user(request: Request) -> Any:
-        """Get current authenticated user from the request. Raises 401 if not authenticated."""
-        # we have a function to get the current user from the request,if not autheticated say not authorised
-        # mo: not implemented yet, we'll come back to this later
-        user = getattr(request.state, "user", None)
-        if user is None:
-            raise HTTPException(status_code=401, detail="Unauthorised")
-        return user
+    
 
     # this would parse the json array of a question and answer from the gemini output.
     def parse_flashcards_json(raw_text: str, max_cards: int) -> list[dict[str, str]]:
