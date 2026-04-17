@@ -38,7 +38,7 @@ app.add_middleware(
 
 app.include_router(ai_route)
 app.include_router(decks_route)
-app.include_router(deck_cards_route)   # POST/GET /decks/{deck_id}/cards
-app.include_router(cards_route)        # GET/PUT/DELETE /cards/{card_id}
+app.include_router(deck_cards_route)   
+app.include_router(cards_route)       
 app.include_router(auth_route, prefix="/auth", tags=["Auth"])
 app.include_router(analytics_route)
