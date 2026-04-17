@@ -17,8 +17,7 @@ class MCQRequest(BaseModel):
         default=None, min_length=1, description="Raw notes to generate questions from."
     )
 
-    deck_id: int | None = Field(
-        default=None,
+    deck_id: int = Field(
         ge=1,  # greater than or equal to
         description="ID of the deck to use.",
     )
@@ -73,8 +72,6 @@ class GenerateCardsRequest(BaseModel):
         # makes sure notes and deck_id are both provided or both not provided
         if self.notes is None or not self.notes.strip():
             raise ValueError("provide non-empty notes")
-        if self.deck_id is None:
-            raise ValueError("provide deck_id")
         return self
 
     
@@ -270,7 +267,7 @@ async def generate_cards(
         created_cards.append(card)
 
     # returns an orjson response 
-    return ORJSONResponse(
+    return created_cards(
         # will contain a list of card objects
         # unique id for card, question, answer, deck_id, and is_ai_generated boolean
         content={
