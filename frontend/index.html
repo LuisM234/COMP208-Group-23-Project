@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReviseWise</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div id="login-page" class="page-login">
+        <div class="login-heading">ReviseWise</div>
+        <div class="login-subheading">Master any subject with spaced repetition</div>
+
+        <div class="card flex-column">
+            <div class="auth-tabs">
+                <div id="tab-login" class="auth-tab active">Login</div>
+                <div id="tab-signup" class="auth-tab">Sign Up</div>
+            </div>
+
+            <form id="auth-form">
+                <div class="input-group hidden" id="username-group">
+                    <label class="input-label" for="username">Username</label>
+                    <input class="input-field" type="text" id="username" placeholder="Insert Username Here">
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label" for="email">Email</label>
+                    <input class="input-field" type="email" id="email" placeholder="youremail@example.com" required>
+                </div>
+                <div class="input-group">
+                    <label class="input-label" for="password">Password</label>
+                    <input class="input-field" type="password" id="password" placeholder="...................." required>
+                </div>
+
+                <button id="submit-btn" class="primary-action-btn" type="submit">Sign in</button>
+            </form>
+
+            <div id="error-message"></div>
+            <a href="#" id="forgot-password" class="forgot-password-link">Forgot password?</a>
+        </div>
+    </div>
+
+    
+
+
+    <div id="dashboard-page" class="page-dashboard hidden">
+        <div class="dash-header">
+            <div class="dash-heading">ReviseWise</div>
+        </div>
+        </div>
+
+<script src="app.js"></script>
+</body>
+</html>

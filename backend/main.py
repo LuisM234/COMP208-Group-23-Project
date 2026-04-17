@@ -13,13 +13,28 @@ app = FastAPI(
     # speeds up responses from the API
     default_response_class=ORJSONResponse,
 )
-
+register_database(app)
 
 # send to docs if root is accessed
 @app.get("/")
 async def root():
     return RedirectResponse(url="/docs")
 
+from fastapi.middleware.cors import CORSMiddleware
+
+# allows front end to connect to API 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:5500",
+        "http://127.0.0.1:5500"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(ai_route)
 app.include_router(decks_route)
