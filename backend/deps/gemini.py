@@ -7,6 +7,11 @@ from google.genai import errors, types
 from pydantic import BaseModel
 
 
+from deps.database import AIGenerationRun
+
+
+
+
 class Flashcard(BaseModel):
     """Model for a flashcard with a question and answer."""
 
@@ -21,6 +26,13 @@ class MCQQuestion(BaseModel):
     correct_answer: str
     explanation: str
 
+
+class GeminiHTTPException(HTTPException):
+    """HTTPException that also carries the saved AIGenerationRun audit record."""
+
+    def __init__(self, status_code: int, detail: str, run: "AIGenerationRun"):
+        super().__init__(status_code=status_code, detail=detail)
+        self.run = run
 
 class GeminiWrapper:
     """Async Gemini wrapper class to create custom callbacks and handle responses.
@@ -65,6 +77,20 @@ class GeminiWrapper:
         list[Flashcard]
             A list of generated flashcards. Each flashcard contains a question and an answer.
         """
+        from deps.database import AIGenerationRun
+
+
+        run = await AIGenerationRun.create(
+            kind="flashcards",
+            input_type="notes",
+            requested_count=num_cards,
+            mode_name=self.model,
+            status="pending",
+            user_id=user_id,
+            deck_id=deck_id,
+        )
+
+
         config = types.GenerateContentConfig(
             system_instruction=f"You generate study flashcards from notes. Return exactly {num_cards} items.",
             temperature=0.3,
