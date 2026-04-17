@@ -2,11 +2,11 @@ from typing import Any, Literal
 
 import orjson
 from fastapi import APIRouter, HTTPException, Request, Depends
-from deps.gemini import GeminiWrapper, get_gemini_wrapper
+from deps.gemini import GeminiWrapper, get_gemini_wrapper, MCQQuestion as MCQQuestionModel
 from fastapi.responses import ORJSONResponse
 from pydantic import BaseModel, Field, model_validator
 from deps.security import get_current_user
-from deps.database import Card, Deck, User
+from deps.database import Card, Deck, User, MCQQuestion
 from deps.gemini import Flashcard
 
 class MCQRequest(BaseModel):
@@ -135,7 +135,11 @@ ai_route = APIRouter(prefix="/ai", tags=["AI"])
 
 
 @ai_route.post("/generate-mcq")
-async def generate_mcq(mcq_request: MCQRequest) -> ORJSONResponse:
+async def generate_mcq(
+    mcq_request: MCQRequest, 
+    current_user: User = Depends(get_current_user),
+    gemini_wrapper: GeminiWrapper = Depends(get_gemini_wrapper)
+) -> ORJSONResponse:
     """Generate exam-style multiple choice questions using Gemini.
 
     Request Body:
@@ -151,7 +155,66 @@ async def generate_mcq(mcq_request: MCQRequest) -> ORJSONResponse:
     - **difficulty** (`"easy" | "medium" | "hard"`, default="medium")
     Difficulty level of the generated questions.
     """
-    return ORJSONResponse(content={"message": "ok"})
+    notes = mcq_request.notes
+    deck_id = mcq_request.deck_id
+    num_questions = mcq_request.num_questions
+    difficulty = mcq_request.difficulty
+    
+    # should be covered by validator
+    if notes and deck_id:
+        raise HTTPException(status_code=400, detail="Provide either notes or deck_id, not both")
+    elif not notes and not deck_id:
+        raise HTTPException(status_code=400, detail="Provide either notes or deck_id")
+    
+    if notes and not notes.strip():
+        raise HTTPException(status_code=400, detail="Provide non-empty notes")
+    
+    if deck_id:
+        try:
+            deck = await current_user.decks.filter(id=deck_id).first()
+            if not deck:
+                raise HTTPException(status_code=404, detail="Deck not found")
+
+        except Exception as e:
+            raise HTTPException(status_code=404, detail=f"Deck not found (error: {str(e)})") from None
+    
+    final_notes: str
+    if notes:
+        final_notes = notes
+    else:
+        final_notes = "\n".join(f"Q: {card.question}\nA: {card.answer}" for card in deck.cards)
+
+    try:
+        response = await gemini_wrapper.generate_mcq_questions(
+            notes=final_notes,
+            num_questions=num_questions,
+            difficulty=difficulty,
+        )
+    except HTTPException as exc:
+        raise exc
+    
+    valid_questions: list[MCQQuestionModel] = []
+    
+    for question in response:
+        if not question.question.strip():
+            continue
+        
+        if len(question.options) != 4:
+            continue
+        
+        for option in question.options:
+            if not option.strip():
+                continue
+            
+        if not question.explanation.strip():
+            continue
+        
+        valid_questions.append(question)
+        
+    if not valid_questions:
+        raise HTTPException(status_code=502, detail="Gemini did not return any valid questions")
+    
+    # pretend i created something
     
 
 # defines a POST endpoint at /generate-cards
