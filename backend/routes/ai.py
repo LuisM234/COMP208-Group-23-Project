@@ -6,6 +6,7 @@ from deps.gemini import GeminiWrapper, get_gemini_wrapper
 from fastapi.responses import ORJSONResponse
 from pydantic import BaseModel, Field, model_validator
 from deps.security import get_current_user
+from deps.database import User
 
 class MCQRequest(BaseModel):
     """Body model for the /generate-mcq endpoint."""
@@ -168,7 +169,7 @@ async def generate_mcq(mcq_request: MCQRequest) -> ORJSONResponse:
 @ai_route.post("/generate-cards")
 async def generate_cards(
     cards_request: GenerateCardsRequest,
-    current_user: Any = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     gemini: GeminiWrapper = Depends(get_gemini_wrapper),
 ) -> ORJSONResponse:
     """Generate flashcards from notes or a deck using Gemini.
