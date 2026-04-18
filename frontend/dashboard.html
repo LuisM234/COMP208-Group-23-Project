@@ -8,52 +8,78 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #f5f5f5;
-            --card-bg: #ffffff;
-            --border: #e0e0e0;
+            --page-start: #e0f8f0;
+            --page-end: #d6e8ff;
+            --surface: rgba(255, 255, 255, 0.82);
+            --surface-strong: rgba(255, 255, 255, 0.94);
+            --surface-border: rgba(255, 255, 255, 0.76);
+            --border: #d8e2ee;
             --text-primary: #111111;
-            --text-secondary: #666666;
+            --text-secondary: #64707f;
             --accent: #000000;
+            --accent-hover: #2a2a2a;
             --accent-text: #ffffff;
             --danger: #dc3545;
-            --sidebar-width: 220px;
-            --nav-height: 56px;
-            --radius: 10px;
+            --nav-height: 62px;
+            --pill-radius: 999px;
+            --card-radius: 24px;
+            --panel-radius: 28px;
+            --shadow-soft: 0 22px 52px rgba(88, 103, 128, 0.14);
+            --shadow-card: 0 18px 38px rgba(98, 114, 138, 0.12);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: 'DM Sans', system-ui, sans-serif;
-            background: var(--bg);
+            background: linear-gradient(135deg, var(--page-start) 0%, var(--page-end) 100%);
+            background-attachment: fixed;
             color: var(--text-primary);
             min-height: 100vh;
+            overflow-x: hidden;
+            padding: 14px 16px 24px;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(circle at 14% 18%, rgba(255, 255, 255, 0.55) 0, rgba(255, 255, 255, 0) 34%),
+                radial-gradient(circle at 88% 12%, rgba(255, 255, 255, 0.34) 0, rgba(255, 255, 255, 0) 28%);
+            pointer-events: none;
+            z-index: -1;
         }
 
         /* ── Top Nav ── */
         .top-nav {
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            height: var(--nav-height);
-            background: var(--card-bg);
-            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 14px;
+            min-height: var(--nav-height);
+            background: var(--surface);
+            border: 1px solid var(--surface-border);
+            border-radius: var(--panel-radius);
+            box-shadow: var(--shadow-soft);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 0 24px;
+            gap: 18px;
+            padding: 12px 20px;
             z-index: 100;
         }
 
         .nav-logo {
-            font-size: 1.2em;
+            font-size: 1.55em;
             font-weight: 800;
             color: var(--text-primary);
             text-decoration: none;
-            letter-spacing: -0.5px;
+            letter-spacing: -0.04em;
         }
 
         .nav-avatar {
-            width: 36px; height: 36px;
+            width: 38px;
+            height: 38px;
             border-radius: 50%;
             background: var(--accent);
             color: var(--accent-text);
@@ -63,72 +89,66 @@
             font-size: 0.78em;
             font-weight: 700;
             cursor: pointer;
+            box-shadow: 0 12px 24px rgba(17, 17, 17, 0.18);
         }
 
-        /* ── Sidebar ── */
-        .sidebar {
-            position: fixed;
-            top: var(--nav-height);
-            left: 0;
-            width: var(--sidebar-width);
-            height: calc(100vh - var(--nav-height));
-            background: var(--card-bg);
-            border-right: 1px solid var(--border);
-            padding: 16px 12px;
-        }
-
-        .sidebar-item {
+        .top-links {
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 10px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            color: var(--text-secondary);
-            font-size: 0.92em;
-            font-weight: 500;
-            text-decoration: none;
-            transition: background 0.15s;
-            margin-bottom: 4px;
+            margin-left: auto;
         }
 
-        .sidebar-item:hover { background: #f0f0f0; color: var(--text-primary); }
-        .sidebar-item.active { background: var(--accent); color: var(--accent-text); }
-        .sidebar-item.active svg { stroke: white; }
+        .top-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 16px;
+            border-radius: var(--pill-radius);
+            border: 1px solid var(--surface-border);
+            background: rgba(255, 255, 255, 0.72);
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            font-weight: 700;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+            box-shadow: 0 12px 24px rgba(108, 122, 148, 0.08);
+        }
 
-        .sidebar-item svg {
-            width: 17px; height: 17px;
-            stroke: var(--text-secondary);
-            fill: none;
-            stroke-width: 2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            flex-shrink: 0;
+        .top-link:hover {
+            background: rgba(255, 255, 255, 0.96);
+            color: var(--text-primary);
+            transform: translateY(-1px);
+        }
+
+        .top-link.active {
+            background: var(--accent);
+            color: var(--accent-text);
+            border-color: var(--accent);
+            box-shadow: 0 14px 26px rgba(17, 17, 17, 0.18);
         }
 
         /* ── Main ── */
         .main {
-            margin-left: var(--sidebar-width);
-            margin-top: var(--nav-height);
-            padding: 32px;
+            margin-top: 22px;
+            padding: 22px 8px 30px 14px;
         }
 
         /* ── Stat Cards ── */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
-            margin-bottom: 32px;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 34px;
         }
 
-        @media (max-width: 1100px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 600px)  { .stats-grid { grid-template-columns: 1fr; } }
-
         .stat-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 20px 22px;
+            background: var(--surface-strong);
+            border: 1px solid var(--surface-border);
+            border-radius: var(--card-radius);
+            padding: 22px 24px;
+            box-shadow: var(--shadow-card);
         }
 
         .stat-card-header {
@@ -145,7 +165,8 @@
         }
 
         .stat-icon {
-            width: 20px; height: 20px;
+            width: 22px;
+            height: 22px;
             flex-shrink: 0;
         }
 
@@ -153,8 +174,8 @@
             font-size: 2em;
             font-weight: 800;
             line-height: 1;
-            margin-bottom: 4px;
-            letter-spacing: -1px;
+            margin-bottom: 6px;
+            letter-spacing: -0.05em;
         }
 
         .stat-sub {
@@ -167,38 +188,49 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 20px;
+            gap: 16px;
+            margin-bottom: 22px;
+            flex-wrap: wrap;
         }
 
         .section-title {
-            font-size: 1.35em;
-            font-weight: 700;
-            letter-spacing: -0.3px;
+            font-size: 1.45em;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+        }
+
+        .section-copy {
+            margin-top: 6px;
+            font-size: 0.92em;
+            color: var(--text-secondary);
+            max-width: 620px;
         }
 
         .section-controls {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            flex-wrap: wrap;
         }
 
         .search-box {
             display: flex;
             align-items: center;
             gap: 8px;
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 8px 14px;
-            font-size: 0.88em;
+            background: var(--surface);
+            border: 1px solid var(--surface-border);
+            border-radius: var(--pill-radius);
+            padding: 11px 16px;
+            font-size: 0.9em;
             color: var(--text-secondary);
-            width: 200px;
+            width: 220px;
+            box-shadow: 0 12px 28px rgba(108, 122, 148, 0.08);
         }
 
         .search-box input {
             border: none;
             outline: none;
-            font-size: 0.9em;
+            font-size: 0.92em;
             font-family: inherit;
             background: transparent;
             color: var(--text-primary);
@@ -208,8 +240,9 @@
         .search-box input::placeholder { color: var(--text-secondary); }
 
         .search-box svg {
-            width: 14px; height: 14px;
-            stroke: var(--text-secondary);
+            width: 14px;
+            height: 14px;
+            stroke: currentColor;
             fill: none;
             stroke-width: 2;
             stroke-linecap: round;
@@ -220,25 +253,36 @@
         .btn {
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 6px;
-            padding: 9px 16px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            background: var(--card-bg);
+            padding: 11px 18px;
+            border: 1px solid var(--surface-border);
+            border-radius: var(--pill-radius);
+            background: var(--surface);
             color: var(--text-primary);
-            font-size: 0.88em;
-            font-weight: 600;
+            font-size: 0.9em;
+            font-weight: 700;
             cursor: pointer;
             font-family: inherit;
             text-decoration: none;
-            transition: background 0.15s;
+            transition: background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
             white-space: nowrap;
+            box-shadow: 0 12px 26px rgba(108, 122, 148, 0.08);
         }
 
-        .btn:hover { background: #f0f0f0; }
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.96);
+            transform: translateY(-1px);
+        }
 
-        .btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
-        .btn-primary:hover { background: #333; }
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+            box-shadow: 0 14px 26px rgba(17, 17, 17, 0.2);
+        }
+
+        .btn-primary:hover { background: var(--accent-hover); }
 
         .btn svg {
             width: 14px; height: 14px;
@@ -252,63 +296,64 @@
         /* ── Deck Grid ── */
         .deck-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 16px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
         }
 
-        @media (max-width: 900px) { .deck-grid { grid-template-columns: 1fr; } }
-
         .deck-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 20px 22px;
+            background: var(--surface-strong);
+            border: 1px solid var(--surface-border);
+            border-radius: 28px;
+            padding: 22px 24px;
             cursor: pointer;
-            transition: box-shadow 0.15s, border-color 0.15s;
+            transition: box-shadow 0.2s ease, transform 0.2s ease;
             text-decoration: none;
             color: inherit;
             display: block;
+            box-shadow: var(--shadow-card);
         }
 
         .deck-card:hover {
-            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-            border-color: #bbb;
+            box-shadow: 0 24px 40px rgba(89, 106, 131, 0.16);
+            transform: translateY(-3px);
         }
 
         .deck-card-name {
-            font-size: 1em;
-            font-weight: 700;
-            margin-bottom: 3px;
+            font-size: 1.08em;
+            font-weight: 800;
+            margin-bottom: 6px;
+            letter-spacing: -0.02em;
         }
 
         .deck-card-meta {
-            font-size: 0.82em;
+            font-size: 0.84em;
             color: var(--text-secondary);
-            margin-bottom: 16px;
+            margin-bottom: 18px;
         }
 
         .progress-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            font-size: 0.82em;
+            font-size: 0.84em;
             color: var(--text-secondary);
-            margin-bottom: 6px;
+            margin-bottom: 8px;
+            font-weight: 600;
         }
 
         .progress-bar {
             width: 100%;
-            height: 6px;
-            background: #ebebeb;
-            border-radius: 10px;
+            height: 8px;
+            background: rgba(17, 17, 17, 0.08);
+            border-radius: 999px;
             overflow: hidden;
-            margin-bottom: 14px;
+            margin-bottom: 18px;
         }
 
         .progress-fill {
             height: 100%;
-            background: var(--accent);
-            border-radius: 10px;
+            background: linear-gradient(90deg, #111111 0%, #3a3a3a 100%);
+            border-radius: 999px;
             transition: width 0.4s ease;
         }
 
@@ -323,44 +368,52 @@
             align-items: center;
             justify-content: center;
             gap: 6px;
-            padding: 8px 16px;
-            border-radius: 7px;
-            font-size: 0.85em;
-            font-weight: 600;
+            padding: 10px 18px;
+            border-radius: var(--pill-radius);
+            font-size: 0.86em;
+            font-weight: 700;
             cursor: pointer;
             font-family: inherit;
-            border: 1px solid var(--border);
+            border: 1px solid var(--accent);
             background: var(--accent);
             color: white;
             text-decoration: none;
-            transition: background 0.15s;
+            transition: background 0.18s ease, transform 0.18s ease;
         }
 
-        .deck-btn:hover { background: #333; }
+        .deck-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
 
         .deck-btn-outline {
-            background: var(--card-bg);
+            background: rgba(255, 255, 255, 0.84);
             color: var(--text-primary);
-            border-color: var(--border);
+            border-color: var(--surface-border);
         }
 
-        .deck-btn-outline:hover { background: #f0f0f0; }
+        .deck-btn-outline:hover { background: rgba(255, 255, 255, 0.98); }
 
         .deck-btn-icon {
-            width: 32px; height: 32px;
+            width: 38px;
+            height: 38px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 1px solid var(--border);
-            border-radius: 7px;
-            background: var(--card-bg);
+            border: 1px solid var(--surface-border);
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.84);
             cursor: pointer;
             margin-left: auto;
-            transition: background 0.15s;
+            transition: background 0.18s ease, transform 0.18s ease;
             flex-shrink: 0;
+            box-shadow: 0 12px 24px rgba(108, 122, 148, 0.08);
         }
 
-        .deck-btn-icon:hover { background: #f0f0f0; }
+        .deck-btn-icon:hover {
+            background: rgba(255, 255, 255, 0.98);
+            transform: translateY(-1px);
+        }
 
         .deck-btn-icon svg {
             width: 15px; height: 15px;
@@ -375,8 +428,12 @@
         .empty-decks {
             grid-column: 1 / -1;
             text-align: center;
-            padding: 60px 20px;
+            padding: 72px 24px;
             color: var(--text-secondary);
+            background: var(--surface);
+            border: 1px solid var(--surface-border);
+            border-radius: 28px;
+            box-shadow: var(--shadow-card);
         }
 
         .empty-decks p { font-size: 0.95em; }
@@ -386,19 +443,23 @@
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.4);
+            background: rgba(17, 24, 39, 0.16);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             z-index: 200;
             align-items: center;
             justify-content: center;
+            padding: 20px;
         }
         .modal-overlay.open { display: flex; }
         .modal {
-            background: var(--card-bg);
-            border-radius: var(--radius);
-            padding: 28px;
+            background: rgba(255, 255, 255, 0.94);
+            border-radius: 30px;
+            padding: 30px;
             width: 100%;
-            max-width: 420px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            max-width: 440px;
+            box-shadow: var(--shadow-soft);
+            border: 1px solid var(--surface-border);
             animation: modalIn 0.18s ease;
         }
         @keyframes modalIn {
@@ -411,59 +472,123 @@
             justify-content: space-between;
             margin-bottom: 20px;
         }
-        .modal-title { font-size: 1.05em; font-weight: 700; }
+        .modal-title {
+            font-size: 1.08em;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
         .modal-close {
-            background: none; border: none; cursor: pointer;
-            color: var(--text-secondary); padding: 4px;
+            background: rgba(255, 255, 255, 0.82);
+            border: 1px solid var(--surface-border);
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            cursor: pointer;
+            color: var(--text-secondary);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
         .modal-close:hover { color: var(--text-primary); }
         .modal-close svg {
-            width: 18px; height: 18px; stroke: currentColor; fill: none;
-            stroke-width: 2; stroke-linecap: round; display: block;
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            display: block;
         }
         .modal-field { margin-bottom: 16px; }
         .modal-field label {
-            display: block; font-size: 0.82em; font-weight: 500;
-            color: var(--text-secondary); margin-bottom: 6px;
+            display: block;
+            font-size: 0.82em;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
         }
         .modal-field input, .modal-field textarea {
-            width: 100%; padding: 10px 14px; border: 1px solid var(--border);
-            border-radius: 6px; font-size: 0.93em; font-family: inherit;
-            outline: none; background: #fafafa;
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            font-size: 0.94em;
+            font-family: inherit;
+            outline: none;
+            background: rgba(250, 250, 250, 0.95);
+            color: var(--text-primary);
         }
         .modal-field input:focus, .modal-field textarea:focus { border-color: #999; background: #fff; }
-        .modal-field textarea { resize: vertical; min-height: 80px; }
-        .modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+        .modal-field textarea { resize: vertical; min-height: 88px; }
+        .modal-footer {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 22px;
+            flex-wrap: wrap;
+        }
         .modal-error { color: var(--danger); font-size: 0.85em; margin-top: 4px; min-height: 18px; }
+
+        @media (max-width: 1100px) {
+            .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .deck-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+
+        @media (max-width: 900px) {
+            body { padding: 14px 14px 24px; }
+
+            .top-nav {
+                gap: 12px;
+                padding: 12px 16px;
+                flex-wrap: wrap;
+            }
+
+            .top-links {
+                width: 100%;
+                margin-left: 0;
+                overflow-x: auto;
+                padding-bottom: 2px;
+            }
+
+            .main {
+                margin-top: 18px;
+                padding: 0 0 24px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .stats-grid { grid-template-columns: 1fr; }
+
+            .section-controls {
+                width: 100%;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box { width: 100%; }
+
+            .deck-actions { flex-wrap: wrap; }
+
+            .deck-btn,
+            .deck-btn-outline {
+                flex: 1 1 180px;
+            }
+        }
     </style>
 </head>
 <body>
 
     <!-- Top Nav -->
     <nav class="top-nav">
-        <a href="index.html" class="nav-logo">ReviseWise</a>
+        <a href="dashboard.html" class="nav-logo">ReviseWise</a>
+        <div class="top-links">
+            <a href="dashboard.html" class="top-link active">Dashboard</a>
+            <a href="my_decks.html" class="top-link">My Decks</a>
+            <a href="#" class="top-link">Community</a>
+            <a href="#" class="top-link">Progress</a>
+        </div>
         <div class="nav-avatar" id="user-initials">JD</div>
     </nav>
-
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <a href="dashboard.html" class="sidebar-item active">
-            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-            Dashboard
-        </a>
-        <a href="dashboard.html" class="sidebar-item">
-            <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-            My Decks
-        </a>
-        <a href="#" class="sidebar-item">
-            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            Community
-        </a>
-        <a href="#" class="sidebar-item">
-            <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-            Progress
-        </a>
-    </aside>
 
     <!-- Main -->
     <main class="main">
@@ -517,16 +642,12 @@
 
         <!-- Decks Section -->
         <div class="section-header">
-            <div class="section-title">My Decks</div>
+            <div>
+                <div class="section-title">Recent Decks</div>
+                <div class="section-copy">Pick up where you left off, then head to your full library when you need the rest.</div>
+            </div>
             <div class="section-controls">
-                <div class="search-box">
-                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                    <input type="text" id="search-input" placeholder="Search decks...">
-                </div>
-                <button class="btn btn-primary" id="new-deck-btn">
-                    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    New Deck
-                </button>
+                <a href="my_decks.html" class="btn">View all decks</a>
             </div>
         </div>
 
@@ -535,31 +656,6 @@
         </div>
 
     </main>
-
-    <!-- New Deck Modal -->
-    <div class="modal-overlay" id="modal-overlay">
-        <div class="modal">
-            <div class="modal-header">
-                <div class="modal-title">Create New Deck</div>
-                <button class="modal-close" id="modal-close-btn">
-                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                </button>
-            </div>
-            <div class="modal-field">
-                <label for="modal-name">Deck Name</label>
-                <input type="text" id="modal-name" placeholder="e.g. Biology – Cell Structure">
-            </div>
-            <div class="modal-field">
-                <label for="modal-desc">Description (optional)</label>
-                <textarea id="modal-desc" placeholder="What's this deck about?"></textarea>
-            </div>
-            <div class="modal-error" id="modal-error"></div>
-            <div class="modal-footer">
-                <button class="btn" id="modal-cancel-btn">Cancel</button>
-                <button class="btn btn-primary" id="modal-save-btn">Create Deck</button>
-            </div>
-        </div>
-    </div>
 
     <script>
         const API_BASE = 'http://localhost:8000';
@@ -616,7 +712,7 @@
             const grid = document.getElementById('deck-grid');
 
             if (!decks.length) {
-                grid.innerHTML = `<div class="empty-decks"><p>No decks yet — click "+ New Deck" to get started.</p></div>`;
+                grid.innerHTML = `<div class="empty-decks"><p>No decks yet — head to My Decks to create your first one.</p></div>`;
                 return;
             }
 
@@ -625,7 +721,7 @@
                 const due = deck.due ?? deck.due_count ?? 0;
                 const progress = deck.progress ?? 0;
                 return `
-                <div class="deck-card" onclick="window.location.href='my_decks.html?deck_id=${deck.id}'">
+                <div class="deck-card" onclick="window.location.href='deck.html?deck_id=${deck.id}'">
                     <div class="deck-card-name">${deck.title}</div>
                     <div class="deck-card-meta">${cards} cards · ${due} due</div>
                     <div class="progress-row">
@@ -636,13 +732,11 @@
                         <div class="progress-fill" style="width:${progress}%"></div>
                     </div>
                     <div class="deck-actions">
-                        <a href="study_session.html?deck_id=${deck.id}" class="deck-btn"
-                            onclick="event.stopPropagation()">Study Now</a>
-                        <button class="deck-btn deck-btn-outline"
-                            onclick="event.stopPropagation(); window.location.href='study_session.html?deck_id=${deck.id}&mode=cram'">
-                            Cram Mode
+                        <a href="study_session.html?deck_id=${deck.id}" class="deck-btn" onclick="event.stopPropagation()">Study Now</a>
+                        <button class="deck-btn deck-btn-outline" onclick="event.stopPropagation(); window.location.href='deck.html?deck_id=${deck.id}'">
+                            Open Deck
                         </button>
-                        <div class="deck-btn-icon" onclick="event.stopPropagation(); window.location.href='my_decks.html?deck_id=${deck.id}'" title="Manage deck">
+                        <div class="deck-btn-icon" onclick="event.stopPropagation(); window.location.href='deck.html?deck_id=${deck.id}'" title="Manage deck">
                             <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
                         </div>
                         <div class="deck-btn-icon" onclick="event.stopPropagation(); confirmDeleteDeck(${deck.id}, '${deck.title.replace(/'/g,"\\'")}');" title="Delete deck" style="margin-left:0">
