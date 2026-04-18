@@ -642,7 +642,6 @@
     <script>
         const API_BASE = 'http://localhost:8000';
 
-        // Set user initials from storage
         const initials = localStorage.getItem('userInitials') || 'JD';
         document.getElementById('user-initials').innerText = initials;
 
@@ -655,94 +654,22 @@
             };
         }
 
-        // ── API calls ──
+        let allDecks = [];
 
-        async function fetchDeck(id) {
-            const r = await fetch(`${API_BASE}/decks/${id}`, { headers: authHeaders() });
-            if (r.status === 401) { window.location.href = 'index.html'; return null; }
-            if (!r.ok) throw new Error(`Could not load deck (${r.status})`);
-            return await r.json();
-        }
-
-        async function saveDeck(id, title, description) {
-            const r = await fetch(`${API_BASE}/decks/${id}`, {
-                method: 'PUT', headers: authHeaders(),
-                body: JSON.stringify({ title, description })
-            });
-            if (!r.ok) {
-                const e = await r.json().catch(() => ({}));
-                throw new Error(e.detail || `Save failed (${r.status})`);
-            }
-            return await r.json();
-        }
-
-        async function removeDeck(id) {
-            const r = await fetch(`${API_BASE}/decks/${id}`, { method: 'DELETE', headers: authHeaders() });
-            if (!r.ok) throw new Error(`Delete failed (${r.status})`);
-        }
-
-        async function fetchCards(id) {
-            const r = await fetch(`${API_BASE}/decks/${id}/cards`, { headers: authHeaders() });
-            if (!r.ok) throw new Error(`Could not load cards (${r.status})`);
-            return await r.json();
-        }
-
-        async function createCard(question, answer) {
-            const r = await fetch(`${API_BASE}/decks/${deckId}/cards`, {
-                method: 'POST', headers: authHeaders(),
-                body: JSON.stringify({ question, answer })
-            });
-            if (!r.ok) {
-                const e = await r.json().catch(() => ({}));
-                throw new Error(e.detail || `Create failed (${r.status})`);
-            }
-            return await r.json();
-        }
-
-        async function updateCard(cardId, question, answer) {
-            const r = await fetch(`${API_BASE}/cards/${cardId}`, {
-                method: 'PUT', headers: authHeaders(),
-                body: JSON.stringify({ question, answer })
-            });
-            if (!r.ok) {
-                const e = await r.json().catch(() => ({}));
-                throw new Error(e.detail || `Update failed (${r.status})`);
-            }
-            return await r.json();
-        }
-
-        async function deleteCard(cardId) {
-            const r = await fetch(`${API_BASE}/cards/${cardId}`, { method: 'DELETE', headers: authHeaders() });
-            if (!r.ok) throw new Error(`Delete failed (${r.status})`);
-        }
-
-        // ── Render ──
-
-        function renderCards(cards) {
-            const tbody = document.getElementById('cards-tbody');
-            document.getElementById('cards-heading').innerText = `Cards (${cards.length})`;
-            document.getElementById('total-cards').value = cards.length;
-
-            if (!cards.length) {
-                tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state">No cards yet — click "Add Card" to get started.</div></td></tr>`;
+        // ── Render deck grid ──
+        function renderDecks(decks) {
+            const grid = document.getElementById('deck-grid');
+            if (!decks.length) {
+                grid.innerHTML = `<div class="empty-decks"><p>No decks yet — click "+ New Deck" to get started.</p></div>`;
                 return;
             }
-
             grid.innerHTML = decks.map(deck => {
-                const cards = deck.cards ?? deck.card_count ?? 0;
-                const due = deck.due ?? deck.due_count ?? 0;
-                const progress = deck.progress ?? 0;
+                const cardCount = deck.cards ?? 0;
                 return `
                 <div class="deck-card" onclick="window.location.href='deck.html?deck_id=${deck.id}'">
                     <div class="deck-card-name">${deck.title}</div>
-                    <div class="deck-card-meta">${cards} cards · ${due} due</div>
-                    <div class="progress-row">
-                        <span>Progress</span>
-                        <span><strong>${progress}%</strong></span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width:${progress}%"></div>
-                    </div>
+                    <div class="deck-card-meta">${cardCount} card${cardCount !== 1 ? 's' : ''}</div>
+                    <div class="deck-card-desc">${deck.description || ''}</div>
                     <div class="deck-actions">
                         <a href="study_session.html?deck_id=${deck.id}" class="deck-btn"
                             onclick="event.stopPropagation()">Study Now</a>
@@ -751,25 +678,20 @@
                             Cram Mode
                         </button>
                         <div class="deck-btn-icon" onclick="event.stopPropagation(); window.location.href='deck.html?deck_id=${deck.id}'" title="Manage deck">
-                            <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
                         </div>
                     </div>
                 </div>`;
             }).join('');
         }
 
-        async function init() {
-            allDecks = await fetchDecks();
-            renderDecks(allDecks);
-        }
-
-        // Search
+        // ── Search ──
         document.getElementById('search-input').addEventListener('input', (e) => {
             const q = e.target.value.toLowerCase();
             renderDecks(allDecks.filter(d => d.title.toLowerCase().includes(q)));
         });
 
-        // Modal
+        // ── New Deck Modal ──
         const overlay    = document.getElementById('modal-overlay');
         const modalError = document.getElementById('modal-error');
 
@@ -790,26 +712,57 @@
         document.getElementById('modal-save-btn').addEventListener('click', async () => {
             const title = document.getElementById('modal-name').value.trim();
             const desc  = document.getElementById('modal-desc').value.trim();
-
             if (!title) { modalError.innerText = 'Deck name is required.'; return; }
-
             const btn = document.getElementById('modal-save-btn');
             btn.disabled = true;
             btn.innerText = 'Creating…';
-
-            const deck = await createDeck(title, desc);
-            allDecks.unshift({ ...deck, cards: 0, due: 0, progress: 0 });
-            renderDecks(allDecks);
-            closeModal();
-
-            btn.disabled = false;
-            btn.innerText = 'Create Deck';
-
-            // Navigate to the new deck
-            window.location.href = `deck.html?deck_id=${deck.id}`;
+            modalError.innerText = '';
+            try {
+                const res = await fetch(`${API_BASE}/decks/`, {
+                    method: 'POST',
+                    headers: authHeaders(),
+                    body: JSON.stringify({ title, description: desc })
+                });
+                if (!res.ok) {
+                    const e = await res.json().catch(() => ({}));
+                    throw new Error(e.detail || `Failed (${res.status})`);
+                }
+                const deck = await res.json();
+                closeModal();
+                window.location.href = `deck.html?deck_id=${deck.id}`;
+            } catch(err) {
+                modalError.innerText = err.message;
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Create Deck';
+            }
         });
+
+        // ── Init ──
+        async function init() {
+            const token = localStorage.getItem('token');
+            if (!token || token === 'demo-token') { window.location.href = 'index.html'; return; }
+            try {
+                const res = await fetch(`${API_BASE}/decks/`, { headers: authHeaders() });
+                if (res.status === 401) { window.location.href = 'index.html'; return; }
+                if (!res.ok) throw new Error(`Failed to load decks (${res.status})`);
+                const decks = await res.json();
+                allDecks = await Promise.all(decks.map(async (deck) => {
+                    try {
+                        const cr = await fetch(`${API_BASE}/decks/${deck.id}/cards`, { headers: authHeaders() });
+                        const cards = cr.ok ? await cr.json() : [];
+                        return { ...deck, cards: cards.length };
+                    } catch { return { ...deck, cards: 0 }; }
+                }));
+                renderDecks(allDecks);
+            } catch(err) {
+                document.getElementById('deck-grid').innerHTML =
+                    `<div class="empty-decks"><p style="color:#dc3545">⚠️ ${err.message}</p></div>`;
+            }
+        }
 
         init();
     </script>
+
 </body>
 </html>

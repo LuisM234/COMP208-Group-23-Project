@@ -714,14 +714,25 @@
 
         async function fetchDecks() {
             const token = localStorage.getItem('token');
-            if (!token) {
+            if (!token || token === 'demo-token') {
                 window.location.href = 'index.html';
                 return [];
             }
             const res = await fetch(`${API_BASE}/decks/`, { headers: authHeaders() });
             if (res.status === 401) { window.location.href = 'index.html'; return []; }
             if (!res.ok) throw new Error(`Failed to load decks (${res.status})`);
-            return await res.json();
+            const decks = await res.json();
+            // Fetch card counts for all decks in parallel
+            const decksWithCounts = await Promise.all(decks.map(async (deck) => {
+                try {
+                    const cr = await fetch(`${API_BASE}/decks/${deck.id}/cards`, { headers: authHeaders() });
+                    const cards = cr.ok ? await cr.json() : [];
+                    return { ...deck, cards: cards.length };
+                } catch {
+                    return { ...deck, cards: 0 };
+                }
+            }));
+            return decksWithCounts;
         }
 
         async function createDeck(title, description) {
@@ -851,7 +862,7 @@
                 renderDecks(allDecks);
                 updateStats(allDecks);
                 closeModal();
-                window.location.href = `my_decks.html?deck_id=${deck.id}`;
+                window.location.href = `deck.html?deck_id=${deck.id}`;
             } catch (err) {
                 modalError.innerText = err.message;
             } finally {

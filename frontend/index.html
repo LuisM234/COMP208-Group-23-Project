@@ -293,9 +293,7 @@
                 storeSession(loginResult.data.access_token, usernameValue || emailValue);
                 window.location.href = 'dashboard.html';
             } catch (error) {
-                // For demo: redirect directly to dashboard
-                storeSession('demo-token', isLoginMode ? emailValue : (usernameValue || emailValue));
-                window.location.href = 'dashboard.html';
+                errorMessage.innerText = "Connection error. Makesure the backend is running.";
             }
         });
     </script>
