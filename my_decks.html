@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReviseWise – My Decks</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ── Variables (kept in sync with your existing styles.css) ── */
+        :root {
+            --bg: #f4f6f8;
+            --sidebar-bg: #ffffff;
+            --card-bg: #ffffff;
+            --text-primary: #111111;
+            --text-secondary: #5f6368;
+            --border: #e3e6ea;
+            --accent: #111111;
+            --accent-hover: #333333;
+            --danger: #dc3545;
+            --pill: 50px;
+            --card-r: 12px;
+            --sidebar-w: 220px;
+            --header-h: 56px;
+            --font: 'DM Sans', system-ui, sans-serif;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── Top Header ── */
+        .top-header {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: var(--header-h);
+            background: var(--sidebar-bg);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .account-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--card-bg);
+            color: var(--text-primary);
+            font-family: var(--font);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .account-btn:hover { background: #f0f0f0; }
+
+        /* ── Layout Shell ── */
+        .shell {
+            display: flex;
+            margin-top: var(--header-h);
+            min-height: calc(100vh - var(--header-h));
+        }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            width: var(--sidebar-w);
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border);
+            padding: 20px 12px;
+            position: fixed;
+            top: var(--header-h);
+            bottom: 0;
+            left: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .nav-item:hover { background: #f0f0f0; color: var(--text-primary); }
+
+        .nav-item.active {
+            background: var(--accent);
+            color: #ffffff;
+        }
+
+        .nav-item.active svg { stroke: #fff; }
+
+        .nav-icon {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* ── Main Content ── */
+        .main {
+            margin-left: var(--sidebar-w);
+            flex: 1;
+            padding: 28px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* ── Deck Settings Card ── */
+        .section-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--card-r);
+            padding: 24px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+
+        .deck-settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 200px;
+            gap: 16px;
+        }
+
+        .field-group { display: flex; flex-direction: column; gap: 6px; }
+
+        .field-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .field-input {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: var(--font);
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            background: #f9fafb;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        .field-input:focus { border-color: var(--text-secondary); background: #fff; }
+
+        .description-area {
+            grid-column: 1 / -1;
+        }
+
+        .field-textarea {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: var(--font);
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            background: #f9fafb;
+            outline: none;
+            resize: vertical;
+            min-height: 70px;
+            width: 100%;
+            transition: border-color 0.15s;
+        }
+
+        .field-textarea:focus { border-color: var(--text-secondary); background: #fff; }
+
+        /* ── Cards Table Card ── */
+        .cards-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .cards-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .action-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-family: var(--font);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s;
+            border: 1px solid var(--border);
+            background: var(--card-bg);
+            color: var(--text-primary);
+        }
+
+        .btn:hover { background: #f0f0f0; }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+
+        .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+
+        .btn svg {
+            width: 14px;
+            height: 14px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2.2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            flex-shrink: 0;
+        }
+
+        /* ── Table ── */
+        .table-wrap { overflow-x: auto; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        thead tr {
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            padding: 10px 14px;
+            text-align: left;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        td {
+            padding: 13px 14px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: middle;
+            color: var(--text-primary);
+        }
+
+        tbody tr:last-child td { border-bottom: none; }
+
+        tbody tr:hover td { background: #f9fafb; }
+
+        .col-num { width: 44px; color: var(--text-secondary); font-size: 0.85rem; }
+        .col-actions { width: 80px; }
+
+        .action-btns {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s;
+            color: var(--text-secondary);
+        }
+
+        .icon-btn:hover { background: #f0f0f0; }
+        .icon-btn.danger:hover { background: #fdf0f0; color: var(--danger); }
+
+        .icon-btn svg {
+            width: 15px;
+            height: 15px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── Top Header ── -->
+<header class="top-header">
+    <div class="logo">ReviseWise</div>
+    <button class="account-btn" onclick="window.location.href='account.html'">Account</button>
+</header>
+
+<!-- ── Shell ── -->
+<div class="shell">
+
+    <!-- ── Sidebar ── -->
+    <nav class="sidebar">
+        <a href="#" class="nav-item">
+            <!-- Dashboard icon -->
+            <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            Dashboard
+        </a>
+        <a href="#" class="nav-item active">
+            <!-- My Decks icon -->
+            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M4 19V7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12"/><path d="M4 19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="9" y1="14" x2="13" y2="14"/></svg>
+            My Decks
+        </a>
+        <a href="#" class="nav-item">
+            <!-- Community icon -->
+            <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="9" cy="7" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M2 21v-1a7 7 0 0 1 14 0v1"/><path d="M17 13a5 5 0 0 1 5 5v1"/></svg>
+            Community
+        </a>
+        <a href="#" class="nav-item">
+            <!-- Progress icon -->
+            <svg class="nav-icon" viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+            Progress
+        </a>
+    </nav>
+
+    <!-- ── Main ── -->
+    <main class="main">
+
+        <!-- Deck Settings -->
+        <div class="card">
+            <div class="section-title">Deck Settings</div>
+            <div class="deck-settings-grid">
+                <div class="field-group">
+                    <label class="field-label" for="deck-name">Deck Name</label>
+                    <input class="field-input" id="deck-name" type="text" value="Biology - Cell Structure" placeholder="Enter deck name">
+                </div>
+                <div class="field-group">
+                    <label class="field-label" for="total-cards">Total Cards</label>
+                    <input class="field-input" id="total-cards" type="number" value="87" readonly>
+                </div>
+                <div class="field-group description-area">
+                    <label class="field-label" for="deck-description">Description</label>
+                    <textarea class="field-textarea" id="deck-description" placeholder="Describe this deck...">Comprehensive deck covering cell biology fundamentals</textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cards Table -->
+        <div class="card">
+            <div class="cards-header">
+                <div class="cards-title">Cards (5)</div>
+                <div class="action-group">
+                    <button class="btn">
+                        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        Import
+                    </button>
+                    <button class="btn">
+                        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Export
+                    </button>
+                    <button class="btn">
+                        <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                        Share
+                    </button>
+                    <button class="btn btn-primary">
+                        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Add Card
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="col-num">#</th>
+                            <th>Front</th>
+                            <th>Back</th>
+                            <th>Last Reviewed</th>
+                            <th>Next Interval</th>
+                            <th class="col-actions">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="col-num">1</td>
+                            <td>What is the powerhouse of the cell?</td>
+                            <td>Mitochondria</td>
+                            <td>2 hours ago</td>
+                            <td>3 days</td>
+                            <td>
+                                <div class="action-btns">
+                                    <button class="icon-btn" title="Edit">
+                                        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                    </button>
+                                    <button class="icon-btn danger" title="Delete">
+                                        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="col-num">2</td>
+                            <td>Define photosynthesis</td>
+                            <td>Process by which plants...</td>
+                            <td>1 day ago</td>
+                            <td>7 days</td>
+                            <td>
+                                <div class="action-btns">
+                                    <button class="icon-btn" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                                    <button class="icon-btn danger" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="col-num">3</td>
+                            <td>What are the four bases of DNA?</td>
+                            <td>A, T, G, C</td>
+                            <td>3 days ago</td>
+                            <td>14 days</td>
+                            <td>
+                                <div class="action-btns">
+                                    <button class="icon-btn" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                                    <button class="icon-btn danger" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="col-num">4</td>
+                            <td>What is osmosis?</td>
+                            <td>Movement of water across...</td>
+                            <td>5 hours ago</td>
+                            <td>1 day</td>
+                            <td>
+                                <div class="action-btns">
+                                    <button class="icon-btn" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                                    <button class="icon-btn danger" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="col-num">5</td>
+                            <td>Define homeostasis</td>
+                            <td>Maintenance of stable internal...</td>
+                            <td>2 days ago</td>
+                            <td>10 days</td>
+                            <td>
+                                <div class="action-btns">
+                                    <button class="icon-btn" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                                    <button class="icon-btn danger" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script src="decks.js"></script>
+</body>
+</html>
