@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReviseWise – Progress</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --page-start: #e0f8f0;
+            --page-end: #d6e8ff;
+            --surface: rgba(255, 255, 255, 0.82);
+            --surface-strong: rgba(255, 255, 255, 0.94);
+            --surface-border: rgba(255, 255, 255, 0.76);
+            --border: #d8e2ee;
+            --text-primary: #111111;
+            --text-secondary: #64707f;
+            --accent: #000000;
+            --accent-hover: #2a2a2a;
+            --accent-text: #ffffff;
+            --nav-height: 62px;
+            --pill-radius: 999px;
+            --card-radius: 24px;
+            --panel-radius: 28px;
+            --shadow-soft: 0 22px 52px rgba(88, 103, 128, 0.14);
+            --shadow-card: 0 18px 38px rgba(98, 114, 138, 0.12);
+            --chart-bg-start: #12233b;
+            --chart-bg-mid: #173651;
+            --chart-bg-end: #144e5f;
+            --chart-accent: #7fd0c4;
+            --chart-accent-soft: rgba(127, 208, 196, 0.22);
+            --chart-accent-bright: #8fc8ff;
+            --chart-text: rgba(255, 255, 255, 0.92);
+            --chart-muted: rgba(255, 255, 255, 0.68);
+            --chart-line-soft: rgba(255, 255, 255, 0.18);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'DM Sans', system-ui, sans-serif;
+            background: linear-gradient(135deg, var(--page-start) 0%, var(--page-end) 100%);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding: 14px 16px 24px;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(circle at 14% 18%, rgba(255, 255, 255, 0.55) 0, rgba(255, 255, 255, 0) 34%),
+                radial-gradient(circle at 88% 12%, rgba(255, 255, 255, 0.34) 0, rgba(255, 255, 255, 0) 28%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .top-nav {
+            min-height: var(--nav-height);
+            background: var(--surface);
+            border: 1px solid var(--surface-border);
+            border-radius: var(--panel-radius);
+            box-shadow: var(--shadow-soft);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            padding: 12px 20px;
+            z-index: 100;
+        }
+
+        .nav-logo {
+            font-size: 1.55em;
+            font-weight: 800;
+            color: var(--text-primary);
+            text-decoration: none;
+            letter-spacing: -0.04em;
+        }
+
+        .nav-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: var(--accent-text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.78em;
+            font-weight: 700;
+            box-shadow: 0 12px 24px rgba(17, 17, 17, 0.18);
+        }
+
+        .top-links {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: auto;
+        }
+
+        .top-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 16px;
+            border-radius: var(--pill-radius);
+            border: 1px solid var(--surface-border);
+            background: rgba(255, 255, 255, 0.72);
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            font-weight: 700;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+            box-shadow: 0 12px 24px rgba(108, 122, 148, 0.08);
+        }
+
+        .top-link:hover {
+            background: rgba(255, 255, 255, 0.96);
+            color: var(--text-primary);
+            transform: translateY(-1px);
+        }
+
+        .top-link.active {
+            background: var(--accent);
+            color: var(--accent-text);
+            border-color: var(--accent);
+            box-shadow: 0 14px 26px rgba(17, 17, 17, 0.18);
+        }
+
+        .main {
+            margin-top: 22px;
+            padding: 24px 8px 34px 14px;
+        }
+
+        .page-intro {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 18px;
+            margin-bottom: 26px;
+            flex-wrap: wrap;
+        }
+
+        .page-title {
+            font-size: 2.35rem;
+            font-weight: 800;
+            letter-spacing: -0.05em;
+            margin-bottom: 8px;
+        }
+
+        .page-copy {
+            color: var(--text-secondary);
+            font-size: 0.96rem;
+            max-width: 680px;
+            line-height: 1.55;
+        }
+
+        .period-switch {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid var(--surface-border);
+            border-radius: var(--pill-radius);
+            padding: 7px;
+            box-shadow: 0 14px 28px rgba(108, 122, 148, 0.08);
+        }
+
+        .period-chip {
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font: inherit;
+            font-size: 0.86rem;
+            font-weight: 700;
+            padding: 10px 14px;
+            border-radius: var(--pill-radius);
+            cursor: pointer;
+            transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+        }
+
+        .period-chip:hover {
+            background: rgba(255, 255, 255, 0.6);
+            color: var(--text-primary);
+            transform: translateY(-1px);
+        }
+
+        .period-chip.active {
+            background: var(--accent);
+            color: var(--accent-text);
+            box-shadow: 0 14px 24px rgba(17, 17, 17, 0.18);
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+
+        .kpi-card {
+            background: var(--surface-strong);
+            border: 1px solid var(--surface-border);
+            border-radius: var(--card-radius);
+            padding: 22px 24px;
+            box-shadow: var(--shadow-card);
+        }
+
+        .kpi-label {
+            font-size: 0.86rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .kpi-value {
+            font-size: 2.05rem;
+            font-weight: 800;
+            letter-spacing: -0.05em;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .kpi-sub {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+        }
+
+        .chart-shell {
+            position: relative;
+            overflow: hidden;
+            border-radius: 34px;
+            padding: 30px 30px 28px;
+            color: var(--chart-text);
+            background:
+                radial-gradient(circle at 92% 14%, rgba(143, 200, 255, 0.14) 0, rgba(143, 200, 255, 0) 20%),
+                linear-gradient(180deg, var(--chart-bg-start) 0%, var(--chart-bg-mid) 54%, var(--chart-bg-end) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 24px 46px rgba(20, 45, 74, 0.2);
+            margin-bottom: 26px;
+        }
+
+        .chart-shell::before {
+            content: "";
+            position: absolute;
+            inset: 18px;
+            border-radius: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            pointer-events: none;
+        }
+
+        .chart-header {
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 20px;
+            z-index: 1;
+            flex-wrap: wrap;
+        }
+
+        .chart-title {
+            font-size: 1.55rem;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            margin-bottom: 8px;
+        }
+
+        .chart-copy {
+            color: var(--chart-muted);
+            font-size: 0.92rem;
+            max-width: 520px;
+            line-height: 1.55;
+        }
+
+        .chart-legend {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 14px;
+            border-radius: var(--pill-radius);
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.84rem;
+            font-weight: 700;
+            color: var(--chart-text);
+        }
+
+        .chart-legend::before {
+            content: "";
+            width: 12px;
+            height: 12px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #d8f3ff 0%, #7fd0c4 100%);
+            box-shadow: 0 0 0 4px rgba(143, 200, 255, 0.12);
+        }
+
+        .chart-layout {
+            position: relative;
+            display: grid;
+            grid-template-columns: 84px 1fr;
+            gap: 10px;
+            align-items: stretch;
+            min-height: 334px;
+            z-index: 1;
+        }
+
+        .y-axis {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            color: rgba(255, 255, 255, 0.82);
+            font-size: 0.88rem;
+            padding-top: 28px;
+            padding-bottom: 34px;
+        }
+
+        .y-axis span {
+            display: block;
+            opacity: 0.9;
+        }
+
+        .chart-area {
+            position: relative;
+            min-height: 334px;
+            padding: 16px 6px 0;
+        }
+
+        .chart-svg {
+            width: 100%;
+            height: 286px;
+            display: block;
+            overflow: visible;
+        }
+
+        .chart-grid-line {
+            stroke: var(--chart-line-soft);
+            stroke-width: 1;
+            stroke-dasharray: 4 8;
+        }
+
+        .chart-guide {
+            stroke: rgba(255, 255, 255, 0.22);
+            stroke-width: 1;
+            stroke-dasharray: 3 8;
+        }
+
+        .chart-area-fill {
+            fill: url(#progress-fill);
+            opacity: 0.5;
+        }
+
+        .chart-line {
+            fill: none;
+            stroke: url(#progress-line);
+            stroke-width: 4;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-dasharray: 1200;
+            stroke-dashoffset: 1200;
+            animation: chartDraw 1.1s ease forwards;
+        }
+
+        .chart-point {
+            fill: #ffffff;
+            stroke: rgba(127, 208, 196, 0.72);
+            stroke-width: 3;
+        }
+
+        .axis-line {
+            stroke: rgba(255, 255, 255, 0.38);
+            stroke-width: 1.4;
+        }
+
+        .chart-pills {
+            position: absolute;
+            inset: 0 6px 44px 6px;
+            pointer-events: none;
+        }
+
+        .chart-pill {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            background: rgba(15, 36, 56, 0.82);
+            color: #ffffff;
+            font-size: 0.75rem;
+            font-weight: 700;
+            line-height: 1;
+            padding: 8px 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(159, 223, 255, 0.16);
+            box-shadow: 0 10px 24px rgba(12, 27, 45, 0.16);
+            opacity: 0;
+            animation: pillIn 0.4s ease forwards;
+        }
+
+        .x-axis {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 8px;
+            margin-left: 84px;
+            margin-top: 10px;
+            color: rgba(255, 255, 255, 0.82);
+            font-size: 0.88rem;
+            font-weight: 600;
+        }
+
+        .x-axis span {
+            text-align: center;
+        }
+
+        .insights-grid {
+            display: grid;
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 18px;
+        }
+
+        .insight-card {
+            background: var(--surface-strong);
+            border: 1px solid var(--surface-border);
+            border-radius: var(--card-radius);
+            padding: 24px;
+            box-shadow: var(--shadow-card);
+        }
+
+        .insight-title {
+            font-size: 1.12rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 8px;
+        }
+
+        .insight-copy {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 18px;
+        }
+
+        .deck-list {
+            display: grid;
+            gap: 14px;
+        }
+
+        .deck-item {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 12px;
+            align-items: center;
+            padding: 16px 18px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.64);
+            border: 1px solid rgba(216, 226, 238, 0.92);
+        }
+
+        .deck-item-title {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .deck-item-meta {
+            font-size: 0.83rem;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .mini-progress-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .mini-progress-bar {
+            width: 100%;
+            height: 9px;
+            background: rgba(17, 17, 17, 0.08);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .mini-progress-fill {
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #111111 0%, #79cdd3 100%);
+        }
+
+        .deck-meta-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 72px;
+            padding: 10px 12px;
+            border-radius: var(--pill-radius);
+            background: linear-gradient(135deg, rgba(17, 17, 17, 0.96) 0%, rgba(20, 67, 86, 0.96) 100%);
+            color: #ffffff;
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+
+        .rhythm-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .rhythm-bars {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 12px;
+            align-items: end;
+            min-height: 180px;
+            padding: 16px 0 4px;
+        }
+
+        .rhythm-day {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rhythm-bar-track {
+            width: 100%;
+            height: 138px;
+            border-radius: 999px;
+            background: linear-gradient(180deg, rgba(17, 17, 17, 0.04) 0%, rgba(17, 17, 17, 0.1) 100%);
+            display: flex;
+            align-items: flex-end;
+            padding: 6px;
+        }
+
+        .rhythm-bar {
+            width: 100%;
+            border-radius: 999px;
+            background: linear-gradient(180deg, #8fc8ff 0%, #79d0c3 55%, #111111 100%);
+            box-shadow: 0 14px 24px rgba(63, 128, 172, 0.2);
+        }
+
+        .rhythm-day label {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            font-weight: 700;
+        }
+
+        .rhythm-note {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 16px 18px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.64);
+            border: 1px solid rgba(216, 226, 238, 0.92);
+        }
+
+        .rhythm-note strong {
+            display: block;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+        }
+
+        .rhythm-note span {
+            color: var(--text-secondary);
+            font-size: 0.84rem;
+            line-height: 1.45;
+        }
+
+        .rhythm-badge {
+            padding: 9px 12px;
+            border-radius: var(--pill-radius);
+            background: rgba(127, 208, 196, 0.18);
+            color: #236775;
+            font-size: 0.78rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        @keyframes chartDraw {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        @keyframes pillIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -42%) scale(0.94);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        @media (max-width: 1100px) {
+            .kpi-grid,
+            .insights-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 960px) {
+            .top-nav {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .top-links {
+                width: 100%;
+                justify-content: center;
+                margin-left: 0;
+                flex-wrap: wrap;
+            }
+
+            .page-intro {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .period-switch {
+                width: fit-content;
+            }
+
+            .chart-layout {
+                grid-template-columns: 64px 1fr;
+            }
+
+            .x-axis {
+                margin-left: 64px;
+            }
+        }
+
+        @media (max-width: 780px) {
+            body {
+                padding: 12px 12px 22px;
+            }
+
+            .main {
+                padding: 20px 0 26px;
+            }
+
+            .kpi-grid,
+            .insights-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-shell {
+                padding: 24px 18px 24px;
+            }
+
+            .chart-layout {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .y-axis {
+                display: none;
+            }
+
+            .chart-area {
+                padding: 12px 0 0;
+            }
+
+            .chart-pills {
+                inset: 0 0 52px 0;
+            }
+
+            .x-axis {
+                margin-left: 0;
+                gap: 4px;
+                font-size: 0.75rem;
+            }
+
+            .rhythm-bars {
+                gap: 10px;
+            }
+
+            .rhythm-bar-track {
+                height: 120px;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .page-title {
+                font-size: 1.95rem;
+            }
+
+            .period-switch {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .period-chip {
+                flex: 1 1 calc(50% - 8px);
+            }
+
+            .chart-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .chart-legend {
+                width: fit-content;
+            }
+
+            .deck-item,
+            .rhythm-note {
+                grid-template-columns: 1fr;
+            }
+
+            .deck-meta-pill {
+                justify-self: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <a href="dashboard.html" class="nav-logo">ReviseWise</a>
+        <div class="top-links">
+            <a href="dashboard.html" class="top-link">Dashboard</a>
+            <a href="my_decks.html" class="top-link">My Decks</a>
+            <a href="#" class="top-link">Community</a>
+            <a href="progress.html" class="top-link active">Progress</a>
+        </div>
+        <div class="nav-avatar" id="user-initials">JD</div>
+    </nav>
+
+    <main class="main">
+        <section class="page-intro">
+            <div>
+                <h1 class="page-title">Progress</h1>
+                <p class="page-copy">Track how your revision is moving over time, spot your strongest decks, and see when your study rhythm is at its best. This first pass uses seeded demo data so we can shape the page before wiring real analytics in.</p>
+            </div>
+            <div class="period-switch" aria-label="Period selector">
+                <button class="period-chip" type="button" data-period="7d">7 days</button>
+                <button class="period-chip active" type="button" data-period="30d">30 days</button>
+                <button class="period-chip" type="button" data-period="90d">90 days</button>
+                <button class="period-chip" type="button" data-period="all">All time</button>
+            </div>
+        </section>
+
+        <section class="kpi-grid">
+            <article class="kpi-card">
+                <div class="kpi-label">Current streak</div>
+                <div class="kpi-value" id="kpi-streak">—</div>
+                <div class="kpi-sub">Active study days in a row</div>
+            </article>
+            <article class="kpi-card">
+                <div class="kpi-label">Cards reviewed</div>
+                <div class="kpi-value" id="kpi-reviewed">—</div>
+                <div class="kpi-sub" id="kpi-reviewed-sub">Across the last 30 days</div>
+            </article>
+            <article class="kpi-card">
+                <div class="kpi-label">Study sessions</div>
+                <div class="kpi-value" id="kpi-sessions">—</div>
+                <div class="kpi-sub" id="kpi-sessions-sub">Days you revised in this range</div>
+            </article>
+            <article class="kpi-card">
+                <div class="kpi-label">Decks studied</div>
+                <div class="kpi-value" id="kpi-decks">—</div>
+                <div class="kpi-sub" id="kpi-decks-sub">Decks you touched in this range</div>
+            </article>
+        </section>
+
+        <section class="chart-shell">
+            <div class="chart-header">
+                <div>
+                    <h2 class="chart-title">Study momentum</h2>
+                    <p class="chart-copy" id="chart-copy">A month view of your revision activity, grouped into weekly checkpoints so it is easy to scan at a glance during the demo.</p>
+                </div>
+                <div class="chart-legend">Cards reviewed</div>
+            </div>
+
+            <div class="chart-layout">
+                <div class="y-axis" id="y-axis-labels"></div>
+                <div>
+                    <div class="chart-area">
+                        <svg class="chart-svg" id="analytics-chart" viewBox="0 0 780 300" preserveAspectRatio="none" aria-label="Cards reviewed chart">
+                            <defs>
+                                <linearGradient id="progress-line" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stop-color="#d8f3ff"></stop>
+                                    <stop offset="55%" stop-color="#8fc8ff"></stop>
+                                    <stop offset="100%" stop-color="#7fd0c4"></stop>
+                                </linearGradient>
+                                <linearGradient id="progress-fill" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" stop-color="rgba(143, 200, 255, 0.34)"></stop>
+                                    <stop offset="100%" stop-color="rgba(127, 208, 196, 0.02)"></stop>
+                                </linearGradient>
+                            </defs>
+                            <g id="chart-grid"></g>
+                            <path class="chart-area-fill" id="area-path"></path>
+                            <path class="chart-line" id="line-path"></path>
+                            <g id="chart-points"></g>
+                            <line class="axis-line" x1="0" y1="270" x2="780" y2="270"></line>
+                        </svg>
+                        <div class="chart-pills" id="chart-pills"></div>
+                    </div>
+                    <div class="x-axis" id="x-axis-labels"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="insights-grid">
+            <article class="insight-card">
+                <h3 class="insight-title">Strongest decks</h3>
+                <p class="insight-copy">These are the decks where your revision looks healthiest right now, based on completion progress and how often you keep them in rotation.</p>
+                <div class="deck-list" id="deck-performance-list"></div>
+            </article>
+
+            <article class="insight-card">
+                <h3 class="insight-title">Study rhythm</h3>
+                <p class="insight-copy">A simple view of when you tend to put the most revision time in over a typical week.</p>
+                <div class="rhythm-wrap">
+                    <div class="rhythm-bars" id="rhythm-bars"></div>
+                    <div class="rhythm-note">
+                        <div>
+                            <strong>Most active on Tuesday and Thursday</strong>
+                            <span>Your strongest study windows land midweek, which is a good place to schedule heavier review sessions.</span>
+                        </div>
+                        <div class="rhythm-badge">4 sessions/week</div>
+                    </div>
+                </div>
+            </article>
+        </section>
+    </main>
+
+    <script>
+        const initials = localStorage.getItem('userInitials') || 'JD';
+        document.getElementById('user-initials').innerText = initials;
+
+        function buildDailySeries(endDate, reviewedSeries, correctSeries) {
+            return reviewedSeries.map((cards_reviewed, index) => {
+                const pointDate = new Date(endDate);
+                pointDate.setDate(pointDate.getDate() - (reviewedSeries.length - 1 - index));
+
+                return {
+                    date: pointDate.toISOString().slice(0, 10),
+                    cards_reviewed,
+                    cards_correct: correctSeries[index]
+                };
+            });
+        }
+
+        function generateTrendSeries(days, start, trend, wave) {
+            return Array.from({ length: days }, (_, index) => {
+                const seasonal = Math.sin(index / 3.8) * wave;
+                const pulse = ((index % 7) - 3) * 1.15;
+                return Math.max(6, Math.round(start + (trend * index) + seasonal + pulse));
+            });
+        }
+
+        function deriveCorrectSeries(reviewedSeries, ratio) {
+            return reviewedSeries.map((value, index) => {
+                const wobble = ((index % 5) - 2) * 0.012;
+                return Math.max(0, Math.round(value * Math.min(0.95, Math.max(0.68, ratio + wobble))));
+            });
+        }
+
+        const analyticsByPeriod = {
+            '7d': {
+                daily: buildDailySeries(
+                    '2026-04-18',
+                    [12, 17, 15, 21, 18, 26, 24],
+                    [10, 14, 13, 17, 15, 22, 20]
+                ),
+                totals: {
+                    total_cards_reviewed: 133,
+                    current_streak_days: 6
+                },
+                overview: {
+                    study_sessions: 5,
+                    decks_studied: 3,
+                    reviewedSub: 'Across the last 7 days',
+                    sessionsSub: 'Days you revised this week',
+                    decksSub: 'Decks you opened this week',
+                    chartCopy: 'A closer look at the last week so you can see the day-to-day pace of your revision.'
+                }
+            },
+            '30d': {
+                daily: buildDailySeries(
+                    '2026-04-18',
+                    [8, 12, 10, 13, 16, 18, 14, 15, 17, 19, 21, 23, 20, 24, 26, 25, 29, 31, 28, 32, 34, 33, 37, 39, 36, 41, 44, 42, 46, 48],
+                    [6, 10, 8, 11, 13, 15, 12, 13, 14, 16, 18, 20, 17, 21, 22, 21, 25, 27, 24, 27, 29, 28, 31, 34, 31, 35, 38, 36, 39, 42]
+                ),
+                totals: {
+                    total_cards_reviewed: 801,
+                    current_streak_days: 6
+                },
+                overview: {
+                    study_sessions: 18,
+                    decks_studied: 4,
+                    reviewedSub: 'Across the last 30 days',
+                    sessionsSub: 'Active revision days this month',
+                    decksSub: 'Decks you touched this month',
+                    chartCopy: 'A 30-day view of your revision activity, grouped into weekly checkpoints so it is easy to scan at a glance.'
+                }
+            },
+            '90d': {
+                daily: buildDailySeries(
+                    '2026-04-18',
+                    generateTrendSeries(90, 9, 0.14, 4.8),
+                    deriveCorrectSeries(generateTrendSeries(90, 9, 0.14, 4.8), 0.82)
+                ),
+                totals: {
+                    total_cards_reviewed: 0,
+                    current_streak_days: 6
+                },
+                overview: {
+                    study_sessions: 54,
+                    decks_studied: 6,
+                    reviewedSub: 'Across the last 90 days',
+                    sessionsSub: 'Active revision days this quarter',
+                    decksSub: 'Decks you revisited this quarter',
+                    chartCopy: 'A wider quarterly trend so you can see whether your study pace has stayed consistent over the term.'
+                }
+            },
+            'all': {
+                daily: buildDailySeries(
+                    '2026-04-18',
+                    generateTrendSeries(180, 7, 0.09, 4.2),
+                    deriveCorrectSeries(generateTrendSeries(180, 7, 0.09, 4.2), 0.81)
+                ),
+                totals: {
+                    total_cards_reviewed: 0,
+                    current_streak_days: 6
+                },
+                overview: {
+                    study_sessions: 109,
+                    decks_studied: 8,
+                    reviewedSub: 'Across your full study history',
+                    sessionsSub: 'Tracked revision days overall',
+                    decksSub: 'Decks you have studied overall',
+                    chartCopy: 'An all-time view that smooths your revision into broader checkpoints so the longer trend is easy to read.'
+                }
+            }
+        };
+
+        Object.values(analyticsByPeriod).forEach(periodData => {
+            periodData.totals.total_cards_reviewed = periodData.daily.reduce(
+                (sum, item) => sum + item.cards_reviewed,
+                0
+            );
+        });
+
+        const strongestDecks = [
+            { name: 'Biology - Cell Structure', progress: 82, cards: 87, note: '14 due next' },
+            { name: 'Spanish Vocabulary', progress: 68, cards: 150, note: '22 due next' },
+            { name: 'History - World War II', progress: 74, cards: 64, note: '9 due next' }
+        ];
+
+        const studyRhythm = [
+            { label: 'Mon', value: 38 },
+            { label: 'Tue', value: 82 },
+            { label: 'Wed', value: 56 },
+            { label: 'Thu', value: 88 },
+            { label: 'Fri', value: 44 },
+            { label: 'Sat', value: 61 },
+            { label: 'Sun', value: 35 }
+        ];
+
+        function formatShortDate(dateString, options) {
+            return new Date(dateString).toLocaleDateString('en-GB', options);
+        }
+
+        function bucketSeries(dailySeries, bucketCount, labelBuilder) {
+            const bucketSize = Math.ceil(dailySeries.length / bucketCount);
+            const points = [];
+
+            for (let index = 0; index < bucketCount; index += 1) {
+                const slice = dailySeries.slice(index * bucketSize, (index + 1) * bucketSize);
+                if (!slice.length) continue;
+
+                points.push({
+                    label: labelBuilder(slice, index),
+                    value: slice.reduce((sum, item) => sum + item.cards_reviewed, 0)
+                });
+            }
+
+            return points;
+        }
+
+        function buildChartPoints(periodKey, dailySeries) {
+            if (periodKey === '7d') {
+                return dailySeries.map(item => ({
+                    label: formatShortDate(item.date, { weekday: 'short' }),
+                    value: item.cards_reviewed
+                }));
+            }
+
+            if (periodKey === '30d') {
+                return bucketSeries(dailySeries, 5, (_, index) => `Week ${index + 1}`);
+            }
+
+            if (periodKey === '90d') {
+                return bucketSeries(dailySeries, 6, (slice) => formatShortDate(slice[0].date, { month: 'short', day: 'numeric' }));
+            }
+
+            return bucketSeries(dailySeries, 6, (slice) => formatShortDate(slice[0].date, { month: 'short' }));
+        }
+
+        function buildLinePath(points) {
+            if (!points.length) return '';
+            return points.map((point, index) => (
+                `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`
+            )).join(' ');
+        }
+
+        function renderChart(points, periodKey) {
+            const width = 780;
+            const height = 300;
+            const baseY = 270;
+            const topY = 18;
+            const chartHeight = baseY - topY;
+            const leftPadding = 28;
+            const rightPadding = 28;
+            const usableWidth = width - leftPadding - rightPadding;
+            const maxValue = Math.max(...points.map(point => point.value));
+            const roundedMax = Math.ceil((maxValue + 8) / 20) * 20;
+
+            const coordinates = points.map((point, index) => {
+                const x = points.length === 1
+                    ? width / 2
+                    : leftPadding + (index / (points.length - 1)) * usableWidth;
+                const y = baseY - (point.value / roundedMax) * chartHeight;
+                return { ...point, x, y };
+            });
+
+            const linePath = buildLinePath(coordinates);
+            const areaPath = `${linePath} L ${coordinates[coordinates.length - 1].x} ${baseY} L ${coordinates[0].x} ${baseY} Z`;
+
+            document.getElementById('line-path').setAttribute('d', linePath);
+            document.getElementById('area-path').setAttribute('d', areaPath);
+
+            const gridGroup = document.getElementById('chart-grid');
+            const pointGroup = document.getElementById('chart-points');
+            const pillLayer = document.getElementById('chart-pills');
+            const xAxis = document.getElementById('x-axis-labels');
+            const yAxis = document.getElementById('y-axis-labels');
+
+            const yTicks = [roundedMax, Math.round(roundedMax * 0.66), Math.round(roundedMax * 0.33), 0];
+            const horizontalGuides = [roundedMax, roundedMax * 0.66, roundedMax * 0.33].map(value => {
+                const y = baseY - (value / roundedMax) * chartHeight;
+                return `<line class="chart-grid-line" x1="0" y1="${y}" x2="${width}" y2="${y}"></line>`;
+            }).join('');
+
+            const verticalGuides = coordinates.map(point => (
+                `<line class="chart-guide" x1="${point.x}" y1="24" x2="${point.x}" y2="${baseY}"></line>`
+            )).join('');
+
+            gridGroup.innerHTML = horizontalGuides + verticalGuides;
+            pointGroup.innerHTML = coordinates.map(point => (
+                `<circle class="chart-point" cx="${point.x}" cy="${point.y}" r="4.2"></circle>`
+            )).join('');
+
+            pillLayer.innerHTML = coordinates.map((point, index) => {
+                const showLabel = periodKey === '7d' ? (index % 2 === 0 || index === coordinates.length - 1) : true;
+                if (!showLabel) return '';
+                return `<div class="chart-pill" style="left:${(point.x / width) * 100}%; top:${(point.y / height) * 100}%; animation-delay:${0.06 + (index * 0.08)}s">${point.value} cards</div>`;
+            }).join('');
+
+            xAxis.style.gridTemplateColumns = `repeat(${points.length}, minmax(0, 1fr))`;
+            xAxis.innerHTML = points.map(point => `<span>${point.label}</span>`).join('');
+            yAxis.innerHTML = yTicks.map(value => `<span>${value}</span>`).join('');
+        }
+
+        function renderDeckInsights() {
+            const list = document.getElementById('deck-performance-list');
+            list.innerHTML = strongestDecks.map(deck => `
+                <div class="deck-item">
+                    <div>
+                        <div class="deck-item-title">${deck.name}</div>
+                        <div class="deck-item-meta">${deck.cards} cards in rotation</div>
+                        <div class="mini-progress-row">
+                            <span>Completion</span>
+                            <span>${deck.progress}%</span>
+                        </div>
+                        <div class="mini-progress-bar">
+                            <div class="mini-progress-fill" style="width:${deck.progress}%"></div>
+                        </div>
+                    </div>
+                    <div class="deck-meta-pill">${deck.note}</div>
+                </div>
+            `).join('');
+        }
+
+        function renderRhythm() {
+            const rhythmBars = document.getElementById('rhythm-bars');
+            rhythmBars.innerHTML = studyRhythm.map(day => `
+                <div class="rhythm-day">
+                    <div class="rhythm-bar-track">
+                        <div class="rhythm-bar" style="height:${day.value}%"></div>
+                    </div>
+                    <label>${day.label}</label>
+                </div>
+            `).join('');
+        }
+
+        function renderKpis(periodData) {
+            document.getElementById('kpi-streak').innerText = `${periodData.totals.current_streak_days} days`;
+            document.getElementById('kpi-reviewed').innerText = periodData.totals.total_cards_reviewed;
+            document.getElementById('kpi-sessions').innerText = periodData.overview.study_sessions;
+            document.getElementById('kpi-decks').innerText = periodData.overview.decks_studied;
+            document.getElementById('kpi-reviewed-sub').innerText = periodData.overview.reviewedSub;
+            document.getElementById('kpi-sessions-sub').innerText = periodData.overview.sessionsSub;
+            document.getElementById('kpi-decks-sub').innerText = periodData.overview.decksSub;
+            document.getElementById('chart-copy').innerText = periodData.overview.chartCopy;
+        }
+
+        function setActivePeriod(periodKey) {
+            const periodData = analyticsByPeriod[periodKey];
+            const chartPoints = buildChartPoints(periodKey, periodData.daily);
+
+            document.querySelectorAll('.period-chip').forEach(button => {
+                button.classList.toggle('active', button.dataset.period === periodKey);
+            });
+
+            renderKpis(periodData);
+            renderChart(chartPoints, periodKey);
+        }
+
+        document.querySelectorAll('.period-chip').forEach(button => {
+            button.addEventListener('click', () => setActivePeriod(button.dataset.period));
+        });
+
+        renderDeckInsights();
+        renderRhythm();
+        setActivePeriod('30d');
+    </script>
+</body>
+</html>
