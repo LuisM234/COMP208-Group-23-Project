@@ -561,6 +561,20 @@
         </div>
     </div>
 
+    <!-- Delete Deck Confirm (Dashboard) -->
+    <div class="modal-overlay" id="dd-overlay">
+        <div class="modal" style="max-width:360px">
+            <div class="modal-header">
+                <div class="modal-title">Delete Deck?</div>
+            </div>
+            <p id="dd-confirm-text" style="font-size:0.9em;color:#666;margin-bottom:20px"></p>
+            <div class="modal-footer">
+                <button class="btn" id="dd-cancel-btn">Cancel</button>
+                <button class="btn btn-primary" id="dd-delete-btn" style="background:#dc3545;border-color:#dc3545">Delete</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const API_BASE = 'http://localhost:8000';
 
@@ -764,19 +778,5 @@
 
         init();
     </script>
-
-    <!-- Delete Deck Confirm (Dashboard) -->
-    <div class="modal-overlay" id="dd-overlay">
-        <div class="modal" style="max-width:360px">
-            <div class="modal-header">
-                <div class="modal-title">Delete Deck?</div>
-            </div>
-            <p id="dd-confirm-text" style="font-size:0.9em;color:#666;margin-bottom:20px"></p>
-            <div class="modal-footer">
-                <button class="btn" id="dd-cancel-btn">Cancel</button>
-                <button class="btn btn-primary" id="dd-delete-btn" style="background:#dc3545;border-color:#dc3545">Delete</button>
-            </div>
-        </div>
-    </div>
 </body>
 </html>
