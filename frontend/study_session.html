@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReviseWise – Study Session</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #f5f5f5;
+      color: #111;
+      min-height: 100vh;
+    }
+
+    /* ── Top Nav ── */
+    .top-nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 56px;
+      background: #fff;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      z-index: 100;
+    }
+
+    .nav-logo {
+      font-size: 1.2em;
+      font-weight: 800;
+      color: #111;
+      text-decoration: none;
+      letter-spacing: -0.5px;
+    }
+
+    .nav-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: #111;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.78em;
+      font-weight: 700;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      position: fixed;
+      top: 56px; left: 0;
+      width: 220px;
+      height: calc(100vh - 56px);
+      background: #fff;
+      border-right: 1px solid #e0e0e0;
+      padding: 16px 12px;
+      z-index: 90;
+    }
+
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #666;
+      font-size: 0.92em;
+      font-weight: 500;
+      text-decoration: none;
+      transition: background 0.15s;
+      margin-bottom: 4px;
+    }
+
+    .sidebar-item:hover { background: #f0f0f0; color: #111; }
+    .sidebar-item.active { background: #111; color: #fff; }
+    .sidebar-item.active svg { stroke: #fff; }
+
+    .sidebar-item svg {
+      width: 17px; height: 17px;
+      stroke: #666;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex-shrink: 0;
+    }
+
+    /* ── Main layout ── */
+    .main {
+      margin-left: 220px;
+      margin-top: 56px;
+      min-height: calc(100vh - 56px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 40px 60px;
+      overflow-y: auto;
+    }
+
+    .session-wrap {
+      width: 100%;
+      max-width: 760px;
+    }
+
+    /* ── Session Header ── */
+    .session-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 24px;
+    }
+
+    .session-title {
+      font-size: 1.75em;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .session-subtitle {
+      font-size: 0.88em;
+      color: #999;
+      margin-top: 3px;
+    }
+
+    .close-btn {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      border: 1px solid #e0e0e0;
+      background: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #999;
+      font-size: 15px;
+      transition: background 0.12s;
+      flex-shrink: 0;
+      text-decoration: none;
+      line-height: 1;
+    }
+    .close-btn:hover { background: #f0f0f0; color: #555; }
+
+    /* ── Progress ── */
+    .progress-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82em;
+      color: #aaa;
+      margin-bottom: 8px;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 5px;
+      background: #e8e8e8;
+      border-radius: 3px;
+      margin-bottom: 28px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: #111;
+      border-radius: 3px;
+      transition: width 0.5s cubic-bezier(.4,0,.2,1);
+    }
+
+    /* ─────────────────────────────────────────
+       FLIP CARD
+    ───────────────────────────────────────── */
+    .card-scene {
+      width: 100%;
+      perspective: 1400px;
+      margin-bottom: 8px;
+    }
+
+    .card-flipper {
+      position: relative;
+      width: 100%;
+      height: 320px;
+      transform-style: preserve-3d;
+      transition: transform 0.55s cubic-bezier(.4, 0, .2, 1);
+      cursor: pointer;
+    }
+
+    .card-flipper.is-flipped {
+      transform: rotateY(180deg);
+    }
+
+    .card-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 60px;
+      text-align: center;
+    }
+
+    .card-back-face {
+      transform: rotateY(180deg);
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 14px;
+      border-radius: 999px;
+      margin-bottom: 24px;
+      letter-spacing: 0.2px;
+    }
+
+    .badge-q { background: #111; color: #fff; }
+    .badge-a { background: none; border: 1px solid #d0d0d0; color: #777; }
+
+    .question-text {
+      font-size: 1.5em;
+      font-weight: 600;
+      color: #111;
+      line-height: 1.4;
+      letter-spacing: -0.2px;
+      max-width: 520px;
+    }
+
+    .show-btn {
+      background: #111;
+      color: #fff;
+      border: none;
+      padding: 11px 28px;
+      border-radius: 9px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      margin-top: 28px;
+      transition: background 0.15s;
+    }
+    .show-btn:hover { background: #333; }
+
+    /* Back face content */
+    .q-small {
+      font-size: 0.88em;
+      color: #bbb;
+      margin-bottom: 14px;
+      max-width: 480px;
+      line-height: 1.5;
+    }
+
+    .answer-divider {
+      width: 48px; height: 1px;
+      background: #e0e0e0;
+      margin: 0 auto 18px;
+    }
+
+    .answer-text {
+      font-size: 1.3em;
+      font-weight: 600;
+      color: #111;
+      line-height: 1.55;
+      letter-spacing: -0.2px;
+      max-width: 520px;
+    }
+
+    /* Click hint */
+    .flip-hint {
+      font-size: 11.5px;
+      color: #ccc;
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    /* ── Rating ── */
+    .rating-section {
+      margin-top: 4px;
+    }
+
+    .rating-label {
+      font-size: 0.88em;
+      color: #999;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    .rating-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .rate-btn {
+      background: #fff;
+      border: 1px solid #e4e4e4;
+      border-radius: 11px;
+      padding: 16px 8px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.12s, border-color 0.12s;
+    }
+    .rate-btn:hover { background: #f5f5f5; border-color: #ccc; }
+
+    .rate-emoji { font-size: 22px; line-height: 1; }
+    .rate-name  { font-size: 13px; font-weight: 600; color: #111; }
+    .rate-time  { font-size: 11px; color: #aaa; }
+
+    .sr-note {
+      font-size: 11px;
+      color: #bbb;
+      text-align: center;
+    }
+
+    /* ── Keyboard hints ── */
+    .kbd-hints {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-top: 22px;
+    }
+
+    .hint {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      color: #aaa;
+    }
+
+    .kbd {
+      background: #f0f0f0;
+      border: 1px solid #d8d8d8;
+      border-radius: 5px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #555;
+    }
+
+    /* ── Done / Empty ── */
+    .done-card {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 14px;
+      padding: 64px 40px;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .done-icon  { font-size: 44px; margin-bottom: 18px; }
+    .done-title { font-size: 1.4em; font-weight: 700; margin-bottom: 8px; }
+    .done-sub   { font-size: 0.9em; color: #999; margin-bottom: 28px; }
+
+    .done-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+    .restart-btn {
+      background: #111; color: #fff;
+      border: 1px solid #111;
+      padding: 12px 28px;
+      border-radius: 9px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: background 0.15s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+    }
+    .restart-btn:hover { background: #333; border-color: #333; }
+
+    .restart-btn.outline {
+      background: #fff; color: #111;
+      border-color: #e0e0e0;
+    }
+    .restart-btn.outline:hover { background: #f5f5f5; }
+  </style>
+</head>
+<body>
+
+  <!-- Top Nav -->
+  <nav class="top-nav">
+    <a href="dashboard.html" class="nav-logo">ReviseWise</a>
+    <div class="nav-avatar" id="user-initials">JD</div>
+  </nav>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <a href="dashboard.html" class="sidebar-item">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </a>
+    <a href="dashboard.html" class="sidebar-item active">
+      <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      My Decks
+    </a>
+    <a href="#" class="sidebar-item">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Community
+    </a>
+    <a href="#" class="sidebar-item">
+      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Progress
+    </a>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="session-wrap" id="app">
+      <div style="text-align:center;color:#aaa;padding:60px 0">Loading cards…</div>
+    </div>
+  </main>
+
+  <script>
+    const API     = 'http://localhost:8000';
+    const DECK_ID = new URLSearchParams(window.location.search).get('deck_id') || 2;
+
+    document.getElementById('user-initials').innerText =
+      localStorage.getItem('userInitials') || 'JD';
+
+    let cards     = [];
+    let idx       = 0;
+    let flipped   = false;
+    let deckTitle = 'Study Session';
+    let deckSub   = '';
+
+    function authHdr() {
+      const t = localStorage.getItem('token');
+      return { 'Content-Type': 'application/json', ...(t ? { 'Authorization': `Bearer ${t}` } : {}) };
+    }
+
+    // Demo fallback data
+    const DEMO = {
+      1: { title:'Spanish Vocabulary', sub:'', cards:[
+        { id:1, question:'What does "hola" mean?', answer:'Hello' },
+        { id:2, question:'What does "gracias" mean?', answer:'Thank you' },
+        { id:3, question:'What does "buenos días" mean?', answer:'Good morning' },
+      ]},
+      2: { title:'Biology - Cell Structure', sub:'Cell biology fundamentals', cards:[
+        { id:1, question:'What is the powerhouse of the cell?', answer:'The mitochondria is the powerhouse of the cell. It generates most of the cell\'s supply of ATP, which is used as a source of chemical energy.' },
+        { id:2, question:'What is the function of the nucleus?', answer:'The nucleus controls the cell\'s activities and contains its genetic material (DNA).' },
+        { id:3, question:'What is the cell membrane?', answer:'A thin, flexible barrier surrounding the cell that controls what enters and leaves.' },
+      ]},
+      3: { title:'History - World War II', sub:'', cards:[
+        { id:1, question:'When did World War II begin?', answer:'September 1, 1939, when Germany invaded Poland.' },
+        { id:2, question:'What was D-Day?', answer:'The Allied invasion of Normandy on June 6, 1944.' },
+      ]},
+      4: { title:'Math - Calculus', sub:'', cards:[
+        { id:1, question:'What is a derivative?', answer:'The derivative measures the rate of change of a function with respect to a variable.' },
+        { id:2, question:'What is an integral?', answer:'An integral computes the area under a curve or the accumulation of quantities.' },
+      ]},
+    };
+
+    async function init() {
+      try {
+        const dr = await fetch(`${API}/decks/${DECK_ID}`, { headers: authHdr() });
+        if (dr.ok) { const d = await dr.json(); deckTitle = d.title || 'Study Session'; deckSub = d.description || ''; }
+        const cr = await fetch(`${API}/decks/${DECK_ID}/cards`, { headers: authHdr() });
+        if (cr.ok) { cards = await cr.json(); render(); return; }
+      } catch {}
+
+      const demo = DEMO[DECK_ID] || DEMO[2];
+      deckTitle = demo.title;
+      deckSub   = demo.sub;
+      cards     = [...demo.cards];
+      render();
+    }
+
+    /* ── Render ── */
+    function render() {
+      if (!cards.length) { renderEmpty(); return; }
+      if (idx >= cards.length) { renderDone(); return; }
+      renderCard();
+    }
+
+    function renderCard() {
+      const card = cards[idx];
+      const pct  = Math.round((idx / cards.length) * 100);
+
+      document.getElementById('app').innerHTML = `
+        <div class="session-header">
+          <div>
+            <div class="session-title">Study Session</div>
+            <div class="session-subtitle">${deckTitle}</div>
+          </div>
+          <a href="javascript:history.back()" class="close-btn" title="Exit">✕</a>
+        </div>
+
+        <div class="progress-row">
+          <span>Card ${idx + 1} of ${cards.length}</span>
+          <span>${pct}%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" style="width:${pct}%"></div>
+        </div>
+
+        <div class="card-scene">
+          <div class="card-flipper${flipped ? ' is-flipped' : ''}" id="card-flipper" onclick="handleCardClick(event)">
+
+            <!-- FRONT -->
+            <div class="card-face">
+              <span class="badge badge-q">Question</span>
+              <div class="question-text">${card.question ?? card.front ?? ''}</div>
+              <button class="show-btn" onclick="event.stopPropagation(); reveal()">Show Answer</button>
+            </div>
+
+            <!-- BACK -->
+            <div class="card-face card-back-face">
+              <span class="badge badge-a">Answer</span>
+              <div class="q-small">${card.question ?? card.front ?? ''}</div>
+              <div class="answer-divider"></div>
+              <div class="answer-text">${card.answer ?? card.back ?? ''}</div>
+            </div>
+
+          </div>
+        </div>
+
+        ${flipped
+          ? `<div class="rating-section">
+               <div class="rating-label">How well did you know this?</div>
+               <div class="rating-grid">
+                 <button class="rate-btn" onclick="rate(1)"><span class="rate-emoji">🤯</span><span class="rate-name">Again</span><span class="rate-time">&lt;1 min</span></button>
+                 <button class="rate-btn" onclick="rate(2)"><span class="rate-emoji">😵</span><span class="rate-name">Hard</span><span class="rate-time">&lt;6 min</span></button>
+                 <button class="rate-btn" onclick="rate(3)"><span class="rate-emoji">🙂</span><span class="rate-name">Good</span><span class="rate-time">&lt;10 min</span></button>
+                 <button class="rate-btn" onclick="rate(4)"><span class="rate-emoji">😄</span><span class="rate-name">Easy</span><span class="rate-time">4 days</span></button>
+               </div>
+               <div class="sr-note">Next review intervals based on spaced repetition algorithm</div>
+             </div>`
+          : `<div class="flip-hint">Click card or press <strong>Space</strong> to reveal answer</div>`
+        }
+
+        <div class="kbd-hints">
+          <div class="hint"><span class="kbd">Space</span> Show answer</div>
+          <div class="hint"><span class="kbd">1–4</span> Rate difficulty</div>
+        </div>`;
+    }
+
+    function renderEmpty() {
+      document.getElementById('app').innerHTML = `
+        <div class="session-header">
+          <div><div class="session-title">Study Session</div><div class="session-subtitle">${deckTitle}</div></div>
+          <a href="javascript:history.back()" class="close-btn">✕</a>
+        </div>
+        <div class="done-card">
+          <div class="done-icon">📚</div>
+          <div class="done-title">No cards in this deck yet</div>
+          <div class="done-sub">Add some cards first to start studying</div>
+          <div class="done-actions">
+            <a href="my_decks.html?deck_id=${DECK_ID}" class="restart-btn outline">Go to Deck</a>
+            <a href="dashboard.html" class="restart-btn outline">Dashboard</a>
+          </div>
+        </div>`;
+    }
+
+    function renderDone() {
+      document.getElementById('app').innerHTML = `
+        <div class="session-header">
+          <div><div class="session-title">Session Complete!</div><div class="session-subtitle">${deckTitle}</div></div>
+        </div>
+        <div class="done-card">
+          <div class="done-icon">🎉</div>
+          <div class="done-title">Great work!</div>
+          <div class="done-sub">You reviewed all ${cards.length} card${cards.length !== 1 ? 's' : ''}</div>
+          <div class="done-actions">
+            <button class="restart-btn" onclick="restart()">Study Again</button>
+            <a href="dashboard.html" class="restart-btn outline">Back to Dashboard</a>
+          </div>
+        </div>`;
+    }
+
+    /* ── Actions ── */
+    function handleCardClick(e) {
+      // Don't flip if clicking the Show Answer button
+      if (e.target.classList.contains('show-btn')) return;
+      if (!flipped) reveal();
+    }
+
+    function reveal() {
+      if (flipped) return;
+      // Flip first (CSS transition), then re-render with rating buttons
+      const flipper = document.getElementById('card-flipper');
+      if (flipper) {
+        flipper.classList.add('is-flipped');
+        setTimeout(() => {
+          flipped = true;
+          renderCard();
+        }, 560);
+      } else {
+        flipped = true;
+        renderCard();
+      }
+    }
+
+    function rate(n) {
+      const card = cards[idx];
+      fetch(`${API}/cards/${card.id}/review`, {
+        method: 'POST', headers: authHdr(),
+        body: JSON.stringify({ rating: n })
+      }).catch(() => {});
+
+      idx++;
+      flipped = false;
+      render();
+    }
+
+    function restart() {
+      idx = 0;
+      flipped = false;
+      render();
+    }
+
+    /* ── Keyboard ── */
+    document.addEventListener('keydown', e => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.code === 'Space') { e.preventDefault(); if (!flipped) reveal(); return; }
+      if (!flipped) return;
+      if (e.key === '1') rate(1);
+      if (e.key === '2') rate(2);
+      if (e.key === '3') rate(3);
+      if (e.key === '4') rate(4);
+    });
+
+    init();
+  </script>
+</body>
+</html>
