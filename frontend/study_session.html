@@ -444,40 +444,26 @@
       return { 'Content-Type': 'application/json', ...(t ? { 'Authorization': `Bearer ${t}` } : {}) };
     }
 
-    // Demo fallback data
-    const DEMO = {
-      1: { title:'Spanish Vocabulary', sub:'', cards:[
-        { id:1, question:'What does "hola" mean?', answer:'Hello' },
-        { id:2, question:'What does "gracias" mean?', answer:'Thank you' },
-        { id:3, question:'What does "buenos días" mean?', answer:'Good morning' },
-      ]},
-      2: { title:'Biology - Cell Structure', sub:'Cell biology fundamentals', cards:[
-        { id:1, question:'What is the powerhouse of the cell?', answer:'The mitochondria is the powerhouse of the cell. It generates most of the cell\'s supply of ATP, which is used as a source of chemical energy.' },
-        { id:2, question:'What is the function of the nucleus?', answer:'The nucleus controls the cell\'s activities and contains its genetic material (DNA).' },
-        { id:3, question:'What is the cell membrane?', answer:'A thin, flexible barrier surrounding the cell that controls what enters and leaves.' },
-      ]},
-      3: { title:'History - World War II', sub:'', cards:[
-        { id:1, question:'When did World War II begin?', answer:'September 1, 1939, when Germany invaded Poland.' },
-        { id:2, question:'What was D-Day?', answer:'The Allied invasion of Normandy on June 6, 1944.' },
-      ]},
-      4: { title:'Math - Calculus', sub:'', cards:[
-        { id:1, question:'What is a derivative?', answer:'The derivative measures the rate of change of a function with respect to a variable.' },
-        { id:2, question:'What is an integral?', answer:'An integral computes the area under a curve or the accumulation of quantities.' },
-      ]},
-    };
-
     async function init() {
       try {
-        const dr = await fetch(`${API}/decks/${DECK_ID}`, { headers: authHdr() });
-        if (dr.ok) { const d = await dr.json(); deckTitle = d.title || 'Study Session'; deckSub = d.description || ''; }
-        const cr = await fetch(`${API}/decks/${DECK_ID}/cards`, { headers: authHdr() });
-        if (cr.ok) { cards = await cr.json(); render(); return; }
-      } catch {}
+        const token = localStorage.getItem('token');
+        if (!token) { window.location.href = 'index.html'; return; }
 
-      const demo = DEMO[DECK_ID] || DEMO[2];
-      deckTitle = demo.title;
-      deckSub   = demo.sub;
-      cards     = [...demo.cards];
+        const dr = await fetch(`${API}/decks/${DECK_ID}`, { headers: authHdr() });
+        if (dr.status === 401) { window.location.href = 'index.html'; return; }
+        if (dr.ok) { const d = await dr.json(); deckTitle = d.title || 'Study Session'; deckSub = d.description || ''; }
+
+        const cr = await fetch(`${API}/decks/${DECK_ID}/cards`, { headers: authHdr() });
+        if (cr.ok) {
+          cards = await cr.json();
+        } else {
+          throw new Error(`Could not load cards (${cr.status})`);
+        }
+      } catch (err) {
+        document.getElementById('app').innerHTML =
+          `<div style="text-align:center;color:#dc3545;padding:60px 0">⚠️ ${err.message}<br><a href="dashboard.html" style="color:#111;margin-top:12px;display:inline-block">← Back to Dashboard</a></div>`;
+        return;
+      }
       render();
     }
 

@@ -577,47 +577,39 @@
             };
         }
 
-        // Demo data fallback
-        const DEMO_DECKS = [
-            { id: 1, title: 'Spanish Vocabulary', description: 'Common vocabulary', cards: 150, due: 23, progress: 68 },
-            { id: 2, title: 'Biology - Cell Structure', description: 'Cell biology fundamentals', cards: 87, due: 12, progress: 82 },
-            { id: 3, title: 'History - World War II', description: 'WWII key events and dates', cards: 203, due: 45, progress: 54 },
-            { id: 4, title: 'Math - Calculus', description: 'Derivatives and integrals', cards: 125, due: 8, progress: 91 }
-        ];
-
         let allDecks = [];
 
         async function fetchDecks() {
-            try {
-                const res = await fetch(`${API_BASE}/decks/`, { headers: authHeaders() });
-                if (!res.ok) throw new Error();
-                return await res.json();
-            } catch {
-                return DEMO_DECKS;
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'index.html';
+                return [];
             }
+            const res = await fetch(`${API_BASE}/decks/`, { headers: authHeaders() });
+            if (res.status === 401) { window.location.href = 'index.html'; return []; }
+            if (!res.ok) throw new Error(`Failed to load decks (${res.status})`);
+            return await res.json();
         }
 
         async function createDeck(title, description) {
-            try {
-                const res = await fetch(`${API_BASE}/decks/`, {
-                    method: 'POST',
-                    headers: authHeaders(),
-                    body: JSON.stringify({ title, description })
-                });
-                if (!res.ok) throw new Error();
-                return await res.json();
-            } catch {
-                // Demo fallback: create locally
-                const newDeck = {
-                    id: Date.now(),
-                    title,
-                    description,
-                    cards: 0,
-                    due: 0,
-                    progress: 0
-                };
-                return newDeck;
+            const res = await fetch(`${API_BASE}/decks/`, {
+                method: 'POST',
+                headers: authHeaders(),
+                body: JSON.stringify({ title, description })
+            });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.detail || `Failed to create deck (${res.status})`);
             }
+            return await res.json();
+        }
+
+        async function deleteDeckById(id) {
+            const res = await fetch(`${API_BASE}/decks/${id}`, {
+                method: 'DELETE',
+                headers: authHeaders()
+            });
+            if (!res.ok) throw new Error(`Failed to delete deck (${res.status})`);
         }
 
         function renderDecks(decks) {
@@ -653,6 +645,9 @@
                         <div class="deck-btn-icon" onclick="event.stopPropagation(); window.location.href='my_decks.html?deck_id=${deck.id}'" title="Manage deck">
                             <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
                         </div>
+                        <div class="deck-btn-icon" onclick="event.stopPropagation(); confirmDeleteDeck(${deck.id}, '${deck.title.replace(/'/g,"\\'")}');" title="Delete deck" style="margin-left:0">
+                            <svg viewBox="0 0 24 24" stroke="#dc3545"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                        </div>
                     </div>
                 </div>`;
             }).join('');
@@ -673,9 +668,15 @@
         }
 
         async function init() {
-            allDecks = await fetchDecks();
-            renderDecks(allDecks);
-            updateStats(allDecks);
+            try {
+                allDecks = await fetchDecks();
+                if (!allDecks) return;
+                renderDecks(allDecks);
+                updateStats(allDecks);
+            } catch (err) {
+                document.getElementById('deck-grid').innerHTML =
+                    `<div class="empty-decks"><p style="color:#dc3545">⚠️ Could not load decks: ${err.message}.<br>Make sure the backend is running and you are logged in.</p></div>`;
+            }
         }
 
         // Search
@@ -711,21 +712,71 @@
             const btn = document.getElementById('modal-save-btn');
             btn.disabled = true;
             btn.innerText = 'Creating…';
+            modalError.innerText = '';
 
-            const deck = await createDeck(title, desc);
-            allDecks.unshift({ ...deck, cards: 0, due: 0, progress: 0 });
-            renderDecks(allDecks);
-            updateStats(allDecks);
-            closeModal();
+            try {
+                const deck = await createDeck(title, desc);
+                allDecks.unshift({ ...deck, cards: 0, due: 0, progress: 0 });
+                renderDecks(allDecks);
+                updateStats(allDecks);
+                closeModal();
+                window.location.href = `my_decks.html?deck_id=${deck.id}`;
+            } catch (err) {
+                modalError.innerText = err.message;
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Create Deck';
+            }
+        });
 
-            btn.disabled = false;
-            btn.innerText = 'Create Deck';
+        // ── Delete Deck from Dashboard ──
+        let _deleteDeckId = null;
 
-            // Navigate to the new deck
-            window.location.href = `my_decks.html?deck_id=${deck.id}`;
+        function confirmDeleteDeck(id, title) {
+            _deleteDeckId = id;
+            document.getElementById('dd-confirm-text').innerText =
+                `Delete "${title}" and all its cards? This cannot be undone.`;
+            document.getElementById('dd-overlay').classList.add('open');
+        }
+
+        document.getElementById('dd-cancel-btn').addEventListener('click', () => {
+            document.getElementById('dd-overlay').classList.remove('open');
+            _deleteDeckId = null;
+        });
+
+        document.getElementById('dd-delete-btn').addEventListener('click', async () => {
+            if (!_deleteDeckId) return;
+            const btn = document.getElementById('dd-delete-btn');
+            btn.disabled = true; btn.innerText = 'Deleting…';
+            try {
+                await deleteDeckById(_deleteDeckId);
+                allDecks = allDecks.filter(d => d.id !== _deleteDeckId);
+                renderDecks(allDecks);
+                updateStats(allDecks);
+            } catch (err) {
+                alert('Could not delete deck: ' + err.message);
+            } finally {
+                document.getElementById('dd-overlay').classList.remove('open');
+                _deleteDeckId = null;
+                btn.disabled = false; btn.innerText = 'Delete';
+            }
         });
 
         init();
     </script>
+
+    <!-- Delete Deck Confirm (Dashboard) -->
+    <div class="modal-overlay" id="dd-overlay">
+        <div class="modal" style="max-width:360px">
+            <div class="modal-header">
+                <div class="modal-title">Delete Deck?</div>
+            </div>
+            <p id="dd-confirm-text" style="font-size:0.9em;color:#666;margin-bottom:20px"></p>
+            <div class="modal-footer">
+                <button class="btn" id="dd-cancel-btn">Cancel</button>
+                <button class="btn btn-primary" id="dd-delete-btn" style="background:#dc3545;border-color:#dc3545">Delete</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

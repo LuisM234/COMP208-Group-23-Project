@@ -606,138 +606,65 @@
             };
         }
 
-        // ── Demo data fallback ──
-        const DEMO_DECKS = {
-            1: { id:1, title:'Spanish Vocabulary',       description:'Common vocabulary and phrases.' },
-            2: { id:2, title:'Biology - Cell Structure',  description:'Comprehensive deck covering cell biology fundamentals' },
-            3: { id:3, title:'History - World War II',   description:'Key WWII events, dates, and figures.' },
-            4: { id:4, title:'Math - Calculus',          description:'Derivatives, integrals and limits.' }
-        };
-
-        const DEMO_CARDS = {
-            1: [
-                { id:101, question:'What does "hola" mean?',         answer:'Hello',            last_reviewed:'2 hours ago',  next_interval:'3 days' },
-                { id:102, question:'What does "gracias" mean?',      answer:'Thank you',        last_reviewed:'1 day ago',    next_interval:'7 days' },
-                { id:103, question:'What does "por favor" mean?',    answer:'Please',           last_reviewed:'3 days ago',   next_interval:'14 days'},
-                { id:104, question:'What does "buenos días" mean?',  answer:'Good morning',     last_reviewed:'5 hours ago',  next_interval:'1 day'  },
-                { id:105, question:'What does "adiós" mean?',        answer:'Goodbye',          last_reviewed:'2 days ago',   next_interval:'10 days'},
-            ],
-            2: [
-                { id:201, question:'What is the powerhouse of the cell?',  answer:'Mitochondria',                    last_reviewed:'2 hours ago',  next_interval:'3 days' },
-                { id:202, question:'Define photosynthesis',                answer:'Process by which plants...',      last_reviewed:'1 day ago',    next_interval:'7 days' },
-                { id:203, question:'What are the four bases of DNA?',      answer:'A, T, G, C',                      last_reviewed:'3 days ago',   next_interval:'14 days'},
-                { id:204, question:'What is osmosis?',                     answer:'Movement of water across...',     last_reviewed:'5 hours ago',  next_interval:'1 day'  },
-                { id:205, question:'Define homeostasis',                   answer:'Maintenance of stable internal...', last_reviewed:'2 days ago', next_interval:'10 days'},
-            ],
-            3: [
-                { id:301, question:'When did WWII begin?',           answer:'September 1, 1939', last_reviewed:'1 day ago',   next_interval:'5 days' },
-                { id:302, question:'What was D-Day?',                answer:'Allied invasion of Normandy, June 6, 1944', last_reviewed:'3 days ago', next_interval:'14 days'},
-                { id:303, question:'Who was Adolf Hitler?',          answer:'Leader of Nazi Germany', last_reviewed:'2 days ago', next_interval:'7 days'},
-            ],
-            4: [
-                { id:401, question:"What is a derivative?",          answer:'Rate of change of a function', last_reviewed:'1 hour ago',  next_interval:'2 days' },
-                { id:402, question:'What is an integral?',           answer:'Area under a curve',           last_reviewed:'4 days ago',  next_interval:'21 days'},
-            ],
-        };
-
-        let demoCards = {};
-        let nextCardId = 1000;
-
-        function getDemoCards(did) {
-            if (!demoCards[did]) {
-                demoCards[did] = DEMO_CARDS[did]
-                    ? [...DEMO_CARDS[did]]
-                    : [
-                        { id: nextCardId++, question: 'Sample question 1', answer: 'Sample answer 1', last_reviewed: '2 hours ago', next_interval: '3 days' },
-                        { id: nextCardId++, question: 'Sample question 2', answer: 'Sample answer 2', last_reviewed: '1 day ago',   next_interval: '7 days' }
-                      ];
-            }
-            return demoCards[did];
-        }
-
-        // ── API calls (with demo fallback) ──
+        // ── API calls ──
 
         async function fetchDeck(id) {
-            try {
-                const r = await fetch(`${API_BASE}/decks/${id}`, { headers: authHeaders() });
-                if (!r.ok) throw new Error();
-                return await r.json();
-            } catch {
-                return DEMO_DECKS[id] || { id, title: `Deck #${id}`, description: '' };
-            }
+            const r = await fetch(`${API_BASE}/decks/${id}`, { headers: authHeaders() });
+            if (r.status === 401) { window.location.href = 'index.html'; return null; }
+            if (!r.ok) throw new Error(`Could not load deck (${r.status})`);
+            return await r.json();
         }
 
         async function saveDeck(id, title, description) {
-            try {
-                const r = await fetch(`${API_BASE}/decks/${id}`, {
-                    method: 'PUT', headers: authHeaders(),
-                    body: JSON.stringify({ title, description })
-                });
-                if (!r.ok) throw new Error();
-                return await r.json();
-            } catch {
-                if (DEMO_DECKS[id]) { DEMO_DECKS[id].title = title; DEMO_DECKS[id].description = description; }
-                return { id, title, description };
+            const r = await fetch(`${API_BASE}/decks/${id}`, {
+                method: 'PUT', headers: authHeaders(),
+                body: JSON.stringify({ title, description })
+            });
+            if (!r.ok) {
+                const e = await r.json().catch(() => ({}));
+                throw new Error(e.detail || `Save failed (${r.status})`);
             }
+            return await r.json();
         }
 
         async function removeDeck(id) {
-            try {
-                const r = await fetch(`${API_BASE}/decks/${id}`, { method: 'DELETE', headers: authHeaders() });
-                if (!r.ok) throw new Error();
-            } catch { /* demo */ }
+            const r = await fetch(`${API_BASE}/decks/${id}`, { method: 'DELETE', headers: authHeaders() });
+            if (!r.ok) throw new Error(`Delete failed (${r.status})`);
         }
 
         async function fetchCards(id) {
-            try {
-                const r = await fetch(`${API_BASE}/decks/${id}/cards`, { headers: authHeaders() });
-                if (!r.ok) throw new Error();
-                return await r.json();
-            } catch {
-                return getDemoCards(id);
-            }
+            const r = await fetch(`${API_BASE}/decks/${id}/cards`, { headers: authHeaders() });
+            if (!r.ok) throw new Error(`Could not load cards (${r.status})`);
+            return await r.json();
         }
 
         async function createCard(question, answer) {
-            try {
-                const r = await fetch(`${API_BASE}/decks/${deckId}/cards`, {
-                    method: 'POST', headers: authHeaders(),
-                    body: JSON.stringify({ question, answer })
-                });
-                if (!r.ok) throw new Error();
-                return await r.json();
-            } catch {
-                const card = { id: nextCardId++, question, answer, last_reviewed: '—', next_interval: '—' };
-                getDemoCards(deckId).push(card);
-                return card;
+            const r = await fetch(`${API_BASE}/decks/${deckId}/cards`, {
+                method: 'POST', headers: authHeaders(),
+                body: JSON.stringify({ question, answer })
+            });
+            if (!r.ok) {
+                const e = await r.json().catch(() => ({}));
+                throw new Error(e.detail || `Create failed (${r.status})`);
             }
+            return await r.json();
         }
 
         async function updateCard(cardId, question, answer) {
-            try {
-                const r = await fetch(`${API_BASE}/cards/${cardId}`, {
-                    method: 'PUT', headers: authHeaders(),
-                    body: JSON.stringify({ question, answer })
-                });
-                if (!r.ok) throw new Error();
-                return await r.json();
-            } catch {
-                const cards = getDemoCards(deckId);
-                const c = cards.find(x => x.id === cardId);
-                if (c) { c.question = question; c.answer = answer; }
-                return { id: cardId, question, answer };
+            const r = await fetch(`${API_BASE}/cards/${cardId}`, {
+                method: 'PUT', headers: authHeaders(),
+                body: JSON.stringify({ question, answer })
+            });
+            if (!r.ok) {
+                const e = await r.json().catch(() => ({}));
+                throw new Error(e.detail || `Update failed (${r.status})`);
             }
+            return await r.json();
         }
 
         async function deleteCard(cardId) {
-            try {
-                const r = await fetch(`${API_BASE}/cards/${cardId}`, { method: 'DELETE', headers: authHeaders() });
-                if (!r.ok) throw new Error();
-            } catch {
-                const cards = getDemoCards(deckId);
-                const idx = cards.findIndex(x => x.id === cardId);
-                if (idx !== -1) cards.splice(idx, 1);
-            }
+            const r = await fetch(`${API_BASE}/cards/${cardId}`, { method: 'DELETE', headers: authHeaders() });
+            if (!r.ok) throw new Error(`Delete failed (${r.status})`);
         }
 
         // ── Render ──

@@ -17,6 +17,7 @@ dependencies = [
     "python-dotenv>=1.2.1",
     "python-jose[cryptography]>=3.5.0",
     "tortoise-orm>=1.1.5",
+    "tzdata>=2026.1",
 ]
 
 # used for linting
