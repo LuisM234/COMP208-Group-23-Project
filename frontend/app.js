@@ -71,7 +71,7 @@ authForm.addEventListener('submit', async (e) => {
         };
     } else {
         payload = {
-            username: usernameValue, // Must match the name in auth.py exactly
+            username: usernameValue,
             email: emailValue,
             password: passwordValue
         };
@@ -90,12 +90,9 @@ authForm.addEventListener('submit', async (e) => {
         const data = await response.json();
 
         if (response.ok) {
-            // ... (rest of your success logic)
-            console.log("Success!", data);
-            loginPage.classList.add('hidden');
-            dashboardPage.classList.remove('hidden');
+            localStorage.setItem('token', data.access_token);
+            window.location.href = 'my_decks.html';
         } else {
-            // This will now show you EXACTLY what field is missing if it fails again
             console.error("Validation Error:", data);
             errorMessage.innerText = data.detail[0].msg || "Check your input fields.";
         }
