@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReviseWise – Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f5f5f5;
+            --card-bg: #ffffff;
+            --border: #e0e0e0;
+            --text-primary: #111111;
+            --text-secondary: #666666;
+            --accent: #000000;
+            --accent-text: #ffffff;
+            --danger: #dc3545;
+            --sidebar-width: 220px;
+            --nav-height: 56px;
+            --radius: 10px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'DM Sans', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        /* ── Top Nav ── */
+        .top-nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: var(--nav-height);
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 100;
+        }
+
+        .nav-logo {
+            font-size: 1.2em;
+            font-weight: 800;
+            color: var(--text-primary);
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-avatar {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: var(--accent-text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.78em;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            position: fixed;
+            top: var(--nav-height);
+            left: 0;
+            width: var(--sidebar-width);
+            height: calc(100vh - var(--nav-height));
+            background: var(--card-bg);
+            border-right: 1px solid var(--border);
+            padding: 16px 12px;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-size: 0.92em;
+            font-weight: 500;
+            text-decoration: none;
+            transition: background 0.15s;
+            margin-bottom: 4px;
+        }
+
+        .sidebar-item:hover { background: #f0f0f0; color: var(--text-primary); }
+        .sidebar-item.active { background: var(--accent); color: var(--accent-text); }
+        .sidebar-item.active svg { stroke: white; }
+
+        .sidebar-item svg {
+            width: 17px; height: 17px;
+            stroke: var(--text-secondary);
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            flex-shrink: 0;
+        }
+
+        /* ── Main ── */
+        .main {
+            margin-left: var(--sidebar-width);
+            margin-top: var(--nav-height);
+            padding: 32px;
+        }
+
+        /* ── Stat Cards ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        @media (max-width: 1100px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px)  { .stats-grid { grid-template-columns: 1fr; } }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px 22px;
+        }
+
+        .stat-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .stat-label {
+            font-size: 0.88em;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .stat-icon {
+            width: 20px; height: 20px;
+            flex-shrink: 0;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 4px;
+            letter-spacing: -1px;
+        }
+
+        .stat-sub {
+            font-size: 0.82em;
+            color: var(--text-secondary);
+        }
+
+        /* ── Deck Section ── */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 1.35em;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+
+        .section-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-size: 0.88em;
+            color: var(--text-secondary);
+            width: 200px;
+        }
+
+        .search-box input {
+            border: none;
+            outline: none;
+            font-size: 0.9em;
+            font-family: inherit;
+            background: transparent;
+            color: var(--text-primary);
+            width: 100%;
+        }
+
+        .search-box input::placeholder { color: var(--text-secondary); }
+
+        .search-box svg {
+            width: 14px; height: 14px;
+            stroke: var(--text-secondary);
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            flex-shrink: 0;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--card-bg);
+            color: var(--text-primary);
+            font-size: 0.88em;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            text-decoration: none;
+            transition: background 0.15s;
+            white-space: nowrap;
+        }
+
+        .btn:hover { background: #f0f0f0; }
+
+        .btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
+        .btn-primary:hover { background: #333; }
+
+        .btn svg {
+            width: 14px; height: 14px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* ── Deck Grid ── */
+        .deck-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        @media (max-width: 900px) { .deck-grid { grid-template-columns: 1fr; } }
+
+        .deck-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px 22px;
+            cursor: pointer;
+            transition: box-shadow 0.15s, border-color 0.15s;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .deck-card:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            border-color: #bbb;
+        }
+
+        .deck-card-name {
+            font-size: 1em;
+            font-weight: 700;
+            margin-bottom: 3px;
+        }
+
+        .deck-card-meta {
+            font-size: 0.82em;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
+        .progress-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.82em;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #ebebeb;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 14px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 10px;
+            transition: width 0.4s ease;
+        }
+
+        .deck-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .deck-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 7px;
+            font-size: 0.85em;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            border: 1px solid var(--border);
+            background: var(--accent);
+            color: white;
+            text-decoration: none;
+            transition: background 0.15s;
+        }
+
+        .deck-btn:hover { background: #333; }
+
+        .deck-btn-outline {
+            background: var(--card-bg);
+            color: var(--text-primary);
+            border-color: var(--border);
+        }
+
+        .deck-btn-outline:hover { background: #f0f0f0; }
+
+        .deck-btn-icon {
+            width: 32px; height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: var(--card-bg);
+            cursor: pointer;
+            margin-left: auto;
+            transition: background 0.15s;
+            flex-shrink: 0;
+        }
+
+        .deck-btn-icon:hover { background: #f0f0f0; }
+
+        .deck-btn-icon svg {
+            width: 15px; height: 15px;
+            stroke: var(--text-secondary);
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* Empty state */
+        .empty-decks {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-decks p { font-size: 0.95em; }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 28px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            animation: modalIn 0.18s ease;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .modal-title { font-size: 1.05em; font-weight: 700; }
+        .modal-close {
+            background: none; border: none; cursor: pointer;
+            color: var(--text-secondary); padding: 4px;
+        }
+        .modal-close:hover { color: var(--text-primary); }
+        .modal-close svg {
+            width: 18px; height: 18px; stroke: currentColor; fill: none;
+            stroke-width: 2; stroke-linecap: round; display: block;
+        }
+        .modal-field { margin-bottom: 16px; }
+        .modal-field label {
+            display: block; font-size: 0.82em; font-weight: 500;
+            color: var(--text-secondary); margin-bottom: 6px;
+        }
+        .modal-field input, .modal-field textarea {
+            width: 100%; padding: 10px 14px; border: 1px solid var(--border);
+            border-radius: 6px; font-size: 0.93em; font-family: inherit;
+            outline: none; background: #fafafa;
+        }
+        .modal-field input:focus, .modal-field textarea:focus { border-color: #999; background: #fff; }
+        .modal-field textarea { resize: vertical; min-height: 80px; }
+        .modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+        .modal-error { color: var(--danger); font-size: 0.85em; margin-top: 4px; min-height: 18px; }
+    </style>
+</head>
+<body>
+
+    <!-- Top Nav -->
+    <nav class="top-nav">
+        <a href="index.html" class="nav-logo">ReviseWise</a>
+        <div class="nav-avatar" id="user-initials">JD</div>
+    </nav>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <a href="dashboard.html" class="sidebar-item active">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+            Dashboard
+        </a>
+        <a href="dashboard.html" class="sidebar-item">
+            <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            My Decks
+        </a>
+        <a href="#" class="sidebar-item">
+            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Community
+        </a>
+        <a href="#" class="sidebar-item">
+            <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Progress
+        </a>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <span class="stat-label">Study Streak</span>
+                    <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+                    </svg>
+                </div>
+                <div class="stat-value">12 days</div>
+                <div class="stat-sub">Keep it up! 🔥</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <span class="stat-label">Cards Due Today</span>
+                    <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                </div>
+                <div class="stat-value" id="stat-due">—</div>
+                <div class="stat-sub" id="stat-due-sub">Across your decks</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <span class="stat-label">Total Cards</span>
+                    <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                    </svg>
+                </div>
+                <div class="stat-value" id="stat-total">—</div>
+                <div class="stat-sub" id="stat-decks-count">In your decks</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <span class="stat-label">Average Progress</span>
+                    <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
+                    </svg>
+                </div>
+                <div class="stat-value" id="stat-avg">—</div>
+                <div class="stat-sub">+5% this week</div>
+            </div>
+        </div>
+
+        <!-- Decks Section -->
+        <div class="section-header">
+            <div class="section-title">My Decks</div>
+            <div class="section-controls">
+                <div class="search-box">
+                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="search-input" placeholder="Search decks...">
+                </div>
+                <button class="btn btn-primary" id="new-deck-btn">
+                    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    New Deck
+                </button>
+            </div>
+        </div>
+
+        <div class="deck-grid" id="deck-grid">
+            <!-- populated by JS -->
+        </div>
+
+    </main>
+
+    <!-- New Deck Modal -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Create New Deck</div>
+                <button class="modal-close" id="modal-close-btn">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="modal-field">
+                <label for="modal-name">Deck Name</label>
+                <input type="text" id="modal-name" placeholder="e.g. Biology – Cell Structure">
+            </div>
+            <div class="modal-field">
+                <label for="modal-desc">Description (optional)</label>
+                <textarea id="modal-desc" placeholder="What's this deck about?"></textarea>
+            </div>
+            <div class="modal-error" id="modal-error"></div>
+            <div class="modal-footer">
+                <button class="btn" id="modal-cancel-btn">Cancel</button>
+                <button class="btn btn-primary" id="modal-save-btn">Create Deck</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+
+        // Set user initials from storage
+        const initials = localStorage.getItem('userInitials') || 'JD';
+        document.getElementById('user-initials').innerText = initials;
+
+        function authHeaders() {
+            const token = localStorage.getItem('token');
+            return {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            };
+        }
+
+        // Demo data fallback
+        const DEMO_DECKS = [
+            { id: 1, title: 'Spanish Vocabulary', description: 'Common vocabulary', cards: 150, due: 23, progress: 68 },
+            { id: 2, title: 'Biology - Cell Structure', description: 'Cell biology fundamentals', cards: 87, due: 12, progress: 82 },
+            { id: 3, title: 'History - World War II', description: 'WWII key events and dates', cards: 203, due: 45, progress: 54 },
+            { id: 4, title: 'Math - Calculus', description: 'Derivatives and integrals', cards: 125, due: 8, progress: 91 }
+        ];
+
+        let allDecks = [];
+
+        async function fetchDecks() {
+            try {
+                const res = await fetch(`${API_BASE}/decks/`, { headers: authHeaders() });
+                if (!res.ok) throw new Error();
+                return await res.json();
+            } catch {
+                return DEMO_DECKS;
+            }
+        }
+
+        async function createDeck(title, description) {
+            try {
+                const res = await fetch(`${API_BASE}/decks/`, {
+                    method: 'POST',
+                    headers: authHeaders(),
+                    body: JSON.stringify({ title, description })
+                });
+                if (!res.ok) throw new Error();
+                return await res.json();
+            } catch {
+                // Demo fallback: create locally
+                const newDeck = {
+                    id: Date.now(),
+                    title,
+                    description,
+                    cards: 0,
+                    due: 0,
+                    progress: 0
+                };
+                return newDeck;
+            }
+        }
+
+        function renderDecks(decks) {
+            const grid = document.getElementById('deck-grid');
+
+            if (!decks.length) {
+                grid.innerHTML = `<div class="empty-decks"><p>No decks yet — click "+ New Deck" to get started.</p></div>`;
+                return;
+            }
+
+            grid.innerHTML = decks.map(deck => {
+                const cards = deck.cards ?? deck.card_count ?? 0;
+                const due = deck.due ?? deck.due_count ?? 0;
+                const progress = deck.progress ?? 0;
+                return `
+                <div class="deck-card" onclick="window.location.href='my_decks.html?deck_id=${deck.id}'">
+                    <div class="deck-card-name">${deck.title}</div>
+                    <div class="deck-card-meta">${cards} cards · ${due} due</div>
+                    <div class="progress-row">
+                        <span>Progress</span>
+                        <span><strong>${progress}%</strong></span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width:${progress}%"></div>
+                    </div>
+                    <div class="deck-actions">
+                        <a href="study_session.html?deck_id=${deck.id}" class="deck-btn"
+                            onclick="event.stopPropagation()">Study Now</a>
+                        <button class="deck-btn deck-btn-outline"
+                            onclick="event.stopPropagation(); window.location.href='study_session.html?deck_id=${deck.id}&mode=cram'">
+                            Cram Mode
+                        </button>
+                        <div class="deck-btn-icon" onclick="event.stopPropagation(); window.location.href='my_decks.html?deck_id=${deck.id}'" title="Manage deck">
+                            <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function updateStats(decks) {
+            const totalCards = decks.reduce((s, d) => s + (d.cards ?? d.card_count ?? 0), 0);
+            const totalDue   = decks.reduce((s, d) => s + (d.due ?? d.due_count ?? 0), 0);
+            const avgProg    = decks.length
+                ? Math.round(decks.reduce((s, d) => s + (d.progress ?? 0), 0) / decks.length)
+                : 0;
+
+            document.getElementById('stat-total').innerText = totalCards;
+            document.getElementById('stat-due').innerText   = totalDue;
+            document.getElementById('stat-avg').innerText   = avgProg + '%';
+            document.getElementById('stat-decks-count').innerText = `In ${decks.length} deck${decks.length !== 1 ? 's' : ''}`;
+            document.getElementById('stat-due-sub').innerText = `Across ${decks.length} deck${decks.length !== 1 ? 's' : ''}`;
+        }
+
+        async function init() {
+            allDecks = await fetchDecks();
+            renderDecks(allDecks);
+            updateStats(allDecks);
+        }
+
+        // Search
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            const q = e.target.value.toLowerCase();
+            renderDecks(allDecks.filter(d => d.title.toLowerCase().includes(q)));
+        });
+
+        // Modal
+        const overlay    = document.getElementById('modal-overlay');
+        const modalError = document.getElementById('modal-error');
+
+        document.getElementById('new-deck-btn').addEventListener('click', () => {
+            document.getElementById('modal-name').value = '';
+            document.getElementById('modal-desc').value = '';
+            modalError.innerText = '';
+            overlay.classList.add('open');
+            document.getElementById('modal-name').focus();
+        });
+
+        function closeModal() { overlay.classList.remove('open'); }
+
+        document.getElementById('modal-close-btn').addEventListener('click', closeModal);
+        document.getElementById('modal-cancel-btn').addEventListener('click', closeModal);
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+
+        document.getElementById('modal-save-btn').addEventListener('click', async () => {
+            const title = document.getElementById('modal-name').value.trim();
+            const desc  = document.getElementById('modal-desc').value.trim();
+
+            if (!title) { modalError.innerText = 'Deck name is required.'; return; }
+
+            const btn = document.getElementById('modal-save-btn');
+            btn.disabled = true;
+            btn.innerText = 'Creating…';
+
+            const deck = await createDeck(title, desc);
+            allDecks.unshift({ ...deck, cards: 0, due: 0, progress: 0 });
+            renderDecks(allDecks);
+            updateStats(allDecks);
+            closeModal();
+
+            btn.disabled = false;
+            btn.innerText = 'Create Deck';
+
+            // Navigate to the new deck
+            window.location.href = `my_decks.html?deck_id=${deck.id}`;
+        });
+
+        init();
+    </script>
+</body>
+</html>
