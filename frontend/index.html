@@ -180,6 +180,7 @@
     </div>
 
     <script>
+        const API_BASE = 'http://localhost:8000';
         const tabLogin = document.getElementById('tab-login');
         const tabSignup = document.getElementById('tab-signup');
         const authForm = document.getElementById('auth-form');
@@ -190,6 +191,37 @@
         const usernameInput = document.getElementById('username');
 
         let isLoginMode = true;
+
+        function formatError(data) {
+            return (data.detail && data.detail[0] && data.detail[0].msg)
+                ? data.detail[0].msg
+                : (data.detail || "Check your input fields.");
+        }
+
+        function storeSession(token, displayName) {
+            localStorage.setItem('token', token);
+            localStorage.setItem(
+                'userInitials',
+                (displayName || 'JD').substring(0, 2).toUpperCase()
+            );
+        }
+
+        async function postJson(endpoint, payload) {
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            let data = {};
+            try {
+                data = await response.json();
+            } catch (error) {
+                data = {};
+            }
+
+            return { response, data };
+        }
 
         tabLogin.addEventListener('click', () => {
             isLoginMode = true;
@@ -220,39 +252,49 @@
             const passwordValue = document.getElementById('password').value;
             const usernameValue = usernameInput.value;
 
-            const endpoint = isLoginMode ? 'http://localhost:8000/auth/login' : 'http://localhost:8000/auth/signup';
-
-            let payload = isLoginMode
-                ? { email: emailValue, password: passwordValue }
-                : { username: usernameValue, email: emailValue, password: passwordValue };
-
             try {
-                const response = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                    body: JSON.stringify(payload)
+                if (isLoginMode) {
+                    const { response, data } = await postJson(`${API_BASE}/auth/login`, {
+                        email: emailValue,
+                        password: passwordValue
+                    });
+
+                    if (!response.ok) {
+                        errorMessage.innerText = formatError(data);
+                        return;
+                    }
+
+                    storeSession(data.access_token, emailValue);
+                    window.location.href = 'dashboard.html';
+                    return;
+                }
+
+                const signupResult = await postJson(`${API_BASE}/auth/signup`, {
+                    username: usernameValue,
+                    email: emailValue,
+                    password: passwordValue
                 });
 
-                const data = await response.json();
-
-                if (response.ok) {
-                    localStorage.setItem('token', data.access_token);
-                    // Store a display name
-                    localStorage.setItem('userInitials', usernameValue
-                        ? usernameValue.substring(0, 2).toUpperCase()
-                        : emailValue.substring(0, 2).toUpperCase());
-                    window.location.href = 'dashboard.html';
-                } else {
-                    errorMessage.innerText = (data.detail && data.detail[0] && data.detail[0].msg)
-                        ? data.detail[0].msg
-                        : (data.detail || "Check your input fields.");
+                if (!signupResult.response.ok) {
+                    errorMessage.innerText = formatError(signupResult.data);
+                    return;
                 }
+
+                const loginResult = await postJson(`${API_BASE}/auth/login`, {
+                    email: emailValue,
+                    password: passwordValue
+                });
+
+                if (!loginResult.response.ok || !loginResult.data.access_token) {
+                    errorMessage.innerText = "Account created, but automatic sign in failed.";
+                    return;
+                }
+
+                storeSession(loginResult.data.access_token, usernameValue || emailValue);
+                window.location.href = 'dashboard.html';
             } catch (error) {
                 // For demo: redirect directly to dashboard
-                localStorage.setItem('token', 'demo-token');
-                localStorage.setItem('userInitials', isLoginMode
-                    ? emailValue.substring(0, 2).toUpperCase()
-                    : (usernameValue.substring(0, 2).toUpperCase() || 'JD'));
+                storeSession('demo-token', isLoginMode ? emailValue : (usernameValue || emailValue));
                 window.location.href = 'dashboard.html';
             }
         });

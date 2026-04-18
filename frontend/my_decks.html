@@ -8,53 +8,76 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #f5f5f5;
-            --card-bg: #ffffff;
-            --border: #e0e0e0;
+            --page-start: #e0f8f0;
+            --page-end: #d6e8ff;
+            --surface: rgba(255, 255, 255, 0.82);
+            --surface-strong: rgba(255, 255, 255, 0.94);
+            --surface-border: rgba(255, 255, 255, 0.76);
+            --border: #d8e2ee;
             --text-primary: #111111;
-            --text-secondary: #666666;
+            --text-secondary: #64707f;
             --accent: #000000;
+            --accent-hover: #2a2a2a;
             --accent-text: #ffffff;
             --danger: #dc3545;
-            --danger-bg: #fff5f5;
-            --sidebar-width: 220px;
-            --nav-height: 56px;
-            --radius: 10px;
+            --nav-height: 62px;
+            --pill-radius: 999px;
+            --card-radius: 24px;
+            --panel-radius: 28px;
+            --shadow-soft: 0 22px 52px rgba(88, 103, 128, 0.14);
+            --shadow-card: 0 18px 38px rgba(98, 114, 138, 0.12);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: 'DM Sans', system-ui, sans-serif;
-            background: var(--bg);
+            background: linear-gradient(135deg, var(--page-start) 0%, var(--page-end) 100%);
+            background-attachment: fixed;
             color: var(--text-primary);
             min-height: 100vh;
+            overflow-x: hidden;
+            padding: 14px 16px 24px;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(circle at 14% 18%, rgba(255, 255, 255, 0.55) 0, rgba(255, 255, 255, 0) 34%),
+                radial-gradient(circle at 88% 12%, rgba(255, 255, 255, 0.34) 0, rgba(255, 255, 255, 0) 28%);
+            pointer-events: none;
+            z-index: -1;
         }
 
         /* ── Top Nav ── */
         .top-nav {
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            height: var(--nav-height);
-            background: var(--card-bg);
-            border-bottom: 1px solid var(--border);
+            min-height: var(--nav-height);
+            background: var(--surface);
+            border: 1px solid var(--surface-border);
+            border-radius: var(--panel-radius);
+            box-shadow: var(--shadow-soft);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 0 24px;
+            gap: 18px;
+            padding: 12px 20px;
             z-index: 100;
         }
 
         .nav-logo {
-            font-size: 1.2em;
+            font-size: 1.55em;
             font-weight: 800;
             color: var(--text-primary);
             text-decoration: none;
-            letter-spacing: -0.5px;
+            letter-spacing: -0.04em;
         }
 
         .nav-avatar {
-            width: 36px; height: 36px;
+            width: 38px;
+            height: 38px;
             border-radius: 50%;
             background: var(--accent);
             color: var(--accent-text);
@@ -64,41 +87,160 @@
             font-size: 0.78em;
             font-weight: 700;
             cursor: pointer;
+            box-shadow: 0 12px 24px rgba(17, 17, 17, 0.18);
         }
 
-        /* ── Sidebar ── */
-        .sidebar {
-            position: fixed;
-            top: var(--nav-height); left: 0;
-            width: var(--sidebar-width);
-            height: calc(100vh - var(--nav-height));
-            background: var(--card-bg);
-            border-right: 1px solid var(--border);
-            padding: 16px 12px;
-        }
-
-        .sidebar-item {
+        .top-links {
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 10px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            color: var(--text-secondary);
-            font-size: 0.92em;
-            font-weight: 500;
-            text-decoration: none;
-            transition: background 0.15s;
-            margin-bottom: 4px;
+            margin-left: auto;
         }
 
-        .sidebar-item:hover { background: #f0f0f0; color: var(--text-primary); }
-        .sidebar-item.active { background: var(--accent); color: var(--accent-text); }
-        .sidebar-item.active svg { stroke: white; }
+        .top-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 16px;
+            border-radius: var(--pill-radius);
+            border: 1px solid var(--surface-border);
+            background: rgba(255, 255, 255, 0.72);
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            font-weight: 700;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+            box-shadow: 0 12px 24px rgba(108, 122, 148, 0.08);
+        }
 
-        .sidebar-item svg {
-            width: 17px; height: 17px;
-            stroke: var(--text-secondary);
+        .top-link:hover {
+            background: rgba(255, 255, 255, 0.96);
+            color: var(--text-primary);
+            transform: translateY(-1px);
+        }
+
+        .top-link.active {
+            background: var(--accent);
+            color: var(--accent-text);
+            border-color: var(--accent);
+            box-shadow: 0 14px 26px rgba(17, 17, 17, 0.18);
+        }
+
+        /* ── Main ── */
+        .main {
+            margin-top: 22px;
+            padding: 22px 8px 30px 14px;
+        }
+
+        /* ── Stat Cards ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 34px;
+        }
+
+        .stat-card {
+            background: var(--surface-strong);
+            border: 1px solid var(--surface-border);
+            border-radius: var(--card-radius);
+            padding: 22px 24px;
+            box-shadow: var(--shadow-card);
+        }
+
+        .stat-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .stat-label {
+            font-size: 0.88em;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .stat-icon {
+            width: 22px;
+            height: 22px;
+            flex-shrink: 0;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 6px;
+            letter-spacing: -0.05em;
+        }
+
+        .stat-sub {
+            font-size: 0.82em;
+            color: var(--text-secondary);
+        }
+
+        /* ── Deck Section ── */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 22px;
+            flex-wrap: wrap;
+        }
+
+        .section-title {
+            font-size: 1.45em;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+        }
+
+        .section-copy {
+            margin-top: 6px;
+            font-size: 0.92em;
+            color: var(--text-secondary);
+            max-width: 620px;
+        }
+
+        .section-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--surface);
+            border: 1px solid var(--surface-border);
+            border-radius: var(--pill-radius);
+            padding: 11px 16px;
+            font-size: 0.9em;
+            color: var(--text-secondary);
+            width: 220px;
+            box-shadow: 0 12px 28px rgba(108, 122, 148, 0.08);
+        }
+
+        .search-box input {
+            border: none;
+            outline: none;
+            font-size: 0.92em;
+            font-family: inherit;
+            background: transparent;
+            color: var(--text-primary);
+            width: 100%;
+        }
+
+        .search-box input::placeholder { color: var(--text-secondary); }
+
+        .search-box svg {
+            width: 14px;
+            height: 14px;
+            stroke: currentColor;
             fill: none;
             stroke-width: 2;
             stroke-linecap: round;
@@ -106,316 +248,330 @@
             flex-shrink: 0;
         }
 
-        /* ── Main ── */
-        .main {
-            margin-left: var(--sidebar-width);
-            margin-top: var(--nav-height);
-            padding: 32px;
-            width: calc(100% - var(--sidebar-width));
-            min-height: calc(100vh - var(--nav-height));
-        }
-
-        /* Breadcrumb */
-        .breadcrumb {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.85em;
-            color: var(--text-secondary);
-            margin-bottom: 20px;
-        }
-
-        .breadcrumb a {
-            color: var(--text-secondary);
-            text-decoration: none;
-            transition: color 0.15s;
-        }
-
-        .breadcrumb a:hover { color: var(--text-primary); }
-
-        .breadcrumb svg {
-            width: 12px; height: 12px;
-            stroke: var(--text-secondary);
-            fill: none;
-            stroke-width: 2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
-
-        .breadcrumb span { color: var(--text-primary); font-weight: 500; }
-
-        /* ── Card ── */
-        .card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 24px;
-            margin-bottom: 24px;
-        }
-
-        .card-title { font-size: 1.05em; font-weight: 700; margin-bottom: 20px; }
-
-        .settings-grid {
-            display: grid;
-            grid-template-columns: 1fr 160px;
-            gap: 16px;
-            margin-bottom: 16px;
-        }
-
-        .field-label {
-            font-size: 0.82em;
-            color: var(--text-secondary);
-            font-weight: 500;
-            margin-bottom: 6px;
-        }
-
-        .field-input {
-            width: 100%;
-            padding: 10px 14px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 0.93em;
-            color: var(--text-primary);
-            background: #fafafa;
-            outline: none;
-            font-family: inherit;
-            transition: border-color 0.15s;
-        }
-
-        .field-input:focus { border-color: #999; background: #fff; }
-        textarea.field-input { resize: vertical; min-height: 70px; }
-        .field-input[readonly] { background: #f5f5f5; color: var(--text-secondary); cursor: default; }
-
-        .settings-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 16px;
-            justify-content: flex-end;
-        }
-
-        #error-message {
-            color: var(--danger);
-            font-size: 0.88em;
-            margin-top: 10px;
-            min-height: 18px;
-        }
-
-        /* ── Section Header ── */
-        .section-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 16px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .section-title { font-size: 1.05em; font-weight: 700; }
-        .btn-group { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-
-        /* ── Buttons ── */
         .btn {
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 6px;
-            padding: 8px 14px;
-            border: 1px solid var(--border);
-            border-radius: 7px;
-            background: var(--card-bg);
+            padding: 11px 18px;
+            border: 1px solid var(--surface-border);
+            border-radius: var(--pill-radius);
+            background: var(--surface);
             color: var(--text-primary);
-            font-size: 0.85em;
-            font-weight: 600;
+            font-size: 0.9em;
+            font-weight: 700;
             cursor: pointer;
             font-family: inherit;
             text-decoration: none;
-            transition: background 0.15s;
+            transition: background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
             white-space: nowrap;
+            box-shadow: 0 12px 26px rgba(108, 122, 148, 0.08);
         }
 
-        .btn:hover { background: #f5f5f5; }
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.96);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+            box-shadow: 0 14px 26px rgba(17, 17, 17, 0.2);
+        }
+
+        .btn-primary:hover { background: var(--accent-hover); }
 
         .btn svg {
             width: 14px; height: 14px;
             stroke: currentColor;
             fill: none;
-            stroke-width: 2;
+            stroke-width: 2.5;
             stroke-linecap: round;
             stroke-linejoin: round;
-            flex-shrink: 0;
         }
 
-        .btn-primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
-        .btn-primary:hover { background: #333; }
-        .btn-danger { color: var(--danger); border-color: var(--danger); }
-        .btn-danger:hover { background: var(--danger-bg); }
-
-        /* ── Table ── */
-        .table-wrap { overflow-x: auto; }
-
-        table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
-
-        thead th {
-            text-align: left;
-            padding: 10px 14px;
-            font-size: 0.82em;
-            font-weight: 600;
-            color: var(--text-secondary);
-            border-bottom: 1px solid var(--border);
+        /* ── Deck Grid ── */
+        .deck-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
         }
 
-        tbody td {
-            padding: 13px 14px;
-            border-bottom: 1px solid #f0f0f0;
-            color: var(--text-primary);
-        }
-
-        .td-truncate {
-            max-width: 280px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        tbody tr:last-child td { border-bottom: none; }
-        tbody tr:hover { background: #fafafa; }
-
-        .actions-cell { display: flex; gap: 4px; align-items: center; }
-
-        .action-btn {
-            background: none;
-            border: none;
+        .deck-card {
+            background: var(--surface-strong);
+            border: 1px solid var(--surface-border);
+            border-radius: 28px;
+            padding: 22px 24px;
             cursor: pointer;
-            padding: 5px;
+            transition: box-shadow 0.2s ease, transform 0.2s ease;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            box-shadow: var(--shadow-card);
+        }
+
+        .deck-card:hover {
+            box-shadow: 0 24px 40px rgba(89, 106, 131, 0.16);
+            transform: translateY(-3px);
+        }
+
+        .deck-card-name {
+            font-size: 1.08em;
+            font-weight: 800;
+            margin-bottom: 6px;
+            letter-spacing: -0.02em;
+        }
+
+        .deck-card-meta {
+            font-size: 0.84em;
             color: var(--text-secondary);
-            border-radius: 5px;
-            transition: background 0.12s, color 0.12s;
+            margin-bottom: 18px;
+        }
+
+        .progress-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.84em;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(17, 17, 17, 0.08);
+            border-radius: 999px;
+            overflow: hidden;
+            margin-bottom: 18px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #111111 0%, #3a3a3a 100%);
+            border-radius: 999px;
+            transition: width 0.4s ease;
+        }
+
+        .deck-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .deck-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 10px 18px;
+            border-radius: var(--pill-radius);
+            font-size: 0.86em;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            border: 1px solid var(--accent);
+            background: var(--accent);
+            color: white;
+            text-decoration: none;
+            transition: background 0.18s ease, transform 0.18s ease;
+        }
+
+        .deck-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        .deck-btn-outline {
+            background: rgba(255, 255, 255, 0.84);
+            color: var(--text-primary);
+            border-color: var(--surface-border);
+        }
+
+        .deck-btn-outline:hover { background: rgba(255, 255, 255, 0.98); }
+
+        .deck-btn-icon {
+            width: 38px;
+            height: 38px;
             display: flex;
             align-items: center;
             justify-content: center;
+            border: 1px solid var(--surface-border);
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.84);
+            cursor: pointer;
+            margin-left: auto;
+            transition: background 0.18s ease, transform 0.18s ease;
+            flex-shrink: 0;
+            box-shadow: 0 12px 24px rgba(108, 122, 148, 0.08);
         }
 
-        .action-btn:hover { background: #f0f0f0; color: var(--text-primary); }
-        .action-btn.danger:hover { background: var(--danger-bg); color: var(--danger); }
+        .deck-btn-icon:hover {
+            background: rgba(255, 255, 255, 0.98);
+            transform: translateY(-1px);
+        }
 
-        .action-btn svg {
+        .deck-btn-icon svg {
             width: 15px; height: 15px;
-            stroke: currentColor;
+            stroke: var(--text-secondary);
             fill: none;
             stroke-width: 2;
             stroke-linecap: round;
             stroke-linejoin: round;
-            display: block;
         }
 
-        .empty-state {
+        /* Empty state */
+        .empty-decks {
+            grid-column: 1 / -1;
             text-align: center;
-            padding: 48px;
+            padding: 72px 24px;
             color: var(--text-secondary);
-            font-size: 0.93em;
+            background: var(--surface);
+            border: 1px solid var(--surface-border);
+            border-radius: 28px;
+            box-shadow: var(--shadow-card);
         }
 
-        /* ── Modal ── */
+        .empty-decks p { font-size: 0.95em; }
+
+        /* Modal */
         .modal-overlay {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.4);
+            background: rgba(17, 24, 39, 0.16);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             z-index: 200;
             align-items: center;
             justify-content: center;
+            padding: 20px;
         }
-
         .modal-overlay.open { display: flex; }
-
         .modal {
-            background: var(--card-bg);
-            border-radius: var(--radius);
-            padding: 28px;
+            background: rgba(255, 255, 255, 0.94);
+            border-radius: 30px;
+            padding: 30px;
             width: 100%;
-            max-width: 480px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            max-width: 440px;
+            box-shadow: var(--shadow-soft);
+            border: 1px solid var(--surface-border);
             animation: modalIn 0.18s ease;
         }
-
         @keyframes modalIn {
             from { opacity: 0; transform: translateY(-10px); }
-            to   { opacity: 1; transform: translateY(0); }
+            to { opacity: 1; transform: translateY(0); }
         }
-
         .modal-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
             margin-bottom: 20px;
         }
-
-        .modal-title { font-size: 1.05em; font-weight: 700; }
-
+        .modal-title {
+            font-size: 1.08em;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
         .modal-close {
-            background: none; border: none; cursor: pointer;
-            color: var(--text-secondary); padding: 4px;
-        }
-
-        .modal-close:hover { color: var(--text-primary); }
-
-        .modal-close svg {
-            width: 18px; height: 18px;
-            stroke: currentColor; fill: none;
-            stroke-width: 2; stroke-linecap: round; display: block;
-        }
-
-        .modal-field { margin-bottom: 16px; }
-
-        .modal-field label {
-            display: block; font-size: 0.82em; font-weight: 500;
-            color: var(--text-secondary); margin-bottom: 6px;
-        }
-
-        .modal-field textarea {
-            width: 100%; padding: 10px 14px;
-            border: 1px solid var(--border); border-radius: 6px;
-            font-size: 0.93em; font-family: inherit; outline: none;
-            background: #fafafa; resize: vertical; min-height: 90px;
-            color: var(--text-primary);
-        }
-
-        .modal-field textarea:focus { border-color: #999; background: #fff; }
-
-        .modal-footer {
-            display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px;
-        }
-
-        .modal-error {
-            color: var(--danger); font-size: 0.85em; margin-top: 4px; min-height: 18px;
-        }
-
-        /* Delete confirm dialog */
-        .confirm-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.4);
-            z-index: 300;
+            background: rgba(255, 255, 255, 0.82);
+            border: 1px solid var(--surface-border);
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            cursor: pointer;
+            color: var(--text-secondary);
+            display: inline-flex;
             align-items: center;
             justify-content: center;
         }
-
-        .confirm-overlay.open { display: flex; }
-
-        .confirm-box {
-            background: var(--card-bg);
-            border-radius: var(--radius);
-            padding: 28px;
+        .modal-close:hover { color: var(--text-primary); }
+        .modal-close svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            display: block;
+        }
+        .modal-field { margin-bottom: 16px; }
+        .modal-field label {
+            display: block;
+            font-size: 0.82em;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        .modal-field input, .modal-field textarea {
             width: 100%;
-            max-width: 380px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-            animation: modalIn 0.18s ease;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            font-size: 0.94em;
+            font-family: inherit;
+            outline: none;
+            background: rgba(250, 250, 250, 0.95);
+            color: var(--text-primary);
+        }
+        .modal-field input:focus, .modal-field textarea:focus { border-color: #999; background: #fff; }
+        .modal-field textarea { resize: vertical; min-height: 88px; }
+        .modal-footer {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 22px;
+            flex-wrap: wrap;
+        }
+        .modal-error { color: var(--danger); font-size: 0.85em; margin-top: 4px; min-height: 18px; }
+
+        @media (max-width: 1100px) {
+            .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .deck-grid { grid-template-columns: 1fr; }
         }
 
-        .confirm-title { font-size: 1.05em; font-weight: 700; margin-bottom: 10px; }
-        .confirm-text { font-size: 0.9em; color: var(--text-secondary); margin-bottom: 24px; }
+        @media (max-width: 900px) {
+            body { padding: 14px 14px 24px; }
 
-        .confirm-footer { display: flex; gap: 8px; justify-content: flex-end; }
+            .top-nav {
+                gap: 12px;
+                padding: 12px 16px;
+                flex-wrap: wrap;
+            }
+
+            .top-links {
+                width: 100%;
+                margin-left: 0;
+                overflow-x: auto;
+                padding-bottom: 2px;
+            }
+
+            .main {
+                margin-top: 18px;
+                padding: 0 0 24px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .stats-grid { grid-template-columns: 1fr; }
+
+            .section-controls {
+                width: 100%;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box { width: 100%; }
+
+            .deck-actions { flex-wrap: wrap; }
+
+            .deck-btn,
+            .deck-btn-outline {
+                flex: 1 1 180px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -423,185 +579,78 @@
     <!-- Top Nav -->
     <nav class="top-nav">
         <a href="dashboard.html" class="nav-logo">ReviseWise</a>
+        <div class="top-links">
+            <a href="dashboard.html" class="top-link">Dashboard</a>
+            <a href="my_decks.html" class="top-link active">My Decks</a>
+            <a href="#" class="top-link">Community</a>
+            <a href="progress.html" class="top-link">Progress</a>
+        </div>
         <div class="nav-avatar" id="user-initials">JD</div>
     </nav>
-
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <a href="dashboard.html" class="sidebar-item">
-            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-            Dashboard
-        </a>
-        <a href="dashboard.html" class="sidebar-item active">
-            <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-            My Decks
-        </a>
-        <a href="#" class="sidebar-item">
-            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            Community
-        </a>
-        <a href="#" class="sidebar-item">
-            <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-            Progress
-        </a>
-    </aside>
 
     <!-- Main -->
     <main class="main">
 
-        <!-- Breadcrumb -->
-        <div class="breadcrumb">
-            <a href="dashboard.html">My Decks</a>
-            <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
-            <span id="breadcrumb-name">Loading…</span>
-        </div>
-
-        <!-- Deck Settings -->
-        <div class="card">
-            <div class="card-title">Deck Settings</div>
-            <div style="display:grid;grid-template-columns:1fr 200px;gap:16px;margin-bottom:16px;">
-                <div>
-                    <div class="field-label">Deck Name</div>
-                    <input class="field-input" type="text" id="deck-name" placeholder="e.g. Biology - Cell Structure">
-                </div>
-                <div>
-                    <div class="field-label">Total Cards</div>
-                    <input class="field-input" type="text" id="total-cards" placeholder="0" readonly>
-                </div>
-            </div>
+        <div class="section-header">
             <div>
-                <div class="field-label">Description</div>
-                <textarea class="field-input" id="deck-description" placeholder="Describe this deck..." style="min-height:80px;"></textarea>
+                <div class="section-title">My Decks</div>
+                <div class="section-copy">Browse your full library, search quickly, create a new deck, or open one to manage its cards.</div>
             </div>
-            <div id="error-message"></div>
-            <div class="settings-actions">
-                <button class="btn btn-danger" id="delete-deck-btn">
-                    <svg viewBox="0 0 24 24">
-                        <polyline points="3 6 5 6 21 6"/>
-                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                        <path d="M10 11v6"/><path d="M14 11v6"/>
-                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-                    </svg>
-                    Delete Deck
-                </button>
-                <button class="btn btn-primary" id="save-deck-btn">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                        <polyline points="17 21 17 13 7 13 7 21"/>
-                        <polyline points="7 3 7 8 15 8"/>
-                    </svg>
-                    Save Changes
+            <div class="section-controls">
+                <div class="search-box">
+                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="search-input" placeholder="Search decks...">
+                </div>
+                <button class="btn btn-primary" id="new-deck-btn">
+                    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    New Deck
                 </button>
             </div>
         </div>
 
-        <!-- Cards Table -->
-        <div class="card">
-            <div class="section-header">
-                <div class="section-title" id="cards-heading">Cards</div>
-                <div class="btn-group">
-                    <button class="btn">
-                        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                        Import
-                    </button>
-                    <button class="btn">
-                        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                        Export
-                    </button>
-                    <button class="btn">
-                        <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-                        Share
-                    </button>
-                    <button class="btn btn-primary" id="add-card-btn">
-                        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        Add Card
-                    </button>
-                </div>
-            </div>
-
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="width:44px">#</th>
-                            <th>Front</th>
-                            <th>Back</th>
-                            <th style="width:150px">Last Reviewed</th>
-                            <th style="width:130px">Next Interval</th>
-                            <th style="width:80px">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="cards-tbody">
-                        <tr><td colspan="6"><div class="empty-state">Loading cards…</div></td></tr>
-                    </tbody>
-                </table>
-            </div>
+        <div class="deck-grid" id="deck-grid">
+            <!-- populated by JS -->
         </div>
 
     </main>
 
-    <!-- Add / Edit Card Modal -->
+    <!-- New Deck Modal -->
     <div class="modal-overlay" id="modal-overlay">
         <div class="modal">
             <div class="modal-header">
-                <div class="modal-title" id="modal-title">Add Card</div>
+                <div class="modal-title">Create New Deck</div>
                 <button class="modal-close" id="modal-close-btn">
                     <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
             </div>
             <div class="modal-field">
-                <label for="modal-front">Front (Question)</label>
-                <textarea id="modal-front" placeholder="e.g. What is the powerhouse of the cell?"></textarea>
+                <label for="modal-name">Deck Name</label>
+                <input type="text" id="modal-name" placeholder="e.g. Biology – Cell Structure">
             </div>
             <div class="modal-field">
-                <label for="modal-back">Back (Answer)</label>
-                <textarea id="modal-back" placeholder="e.g. Mitochondria"></textarea>
+                <label for="modal-desc">Description (optional)</label>
+                <textarea id="modal-desc" placeholder="What's this deck about?"></textarea>
             </div>
             <div class="modal-error" id="modal-error"></div>
             <div class="modal-footer">
                 <button class="btn" id="modal-cancel-btn">Cancel</button>
-                <button class="btn btn-primary" id="modal-save-btn">Save Card</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Delete Card Confirm -->
-    <div class="confirm-overlay" id="confirm-overlay">
-        <div class="confirm-box">
-            <div class="confirm-title">Delete Card?</div>
-            <div class="confirm-text">This card will be permanently deleted and cannot be recovered.</div>
-            <div class="confirm-footer">
-                <button class="btn" id="confirm-cancel-btn">Cancel</button>
-                <button class="btn btn-danger" id="confirm-delete-btn">Delete</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Delete Deck Confirm -->
-    <div class="confirm-overlay" id="confirm-deck-overlay">
-        <div class="confirm-box">
-            <div class="confirm-title">Delete Deck?</div>
-            <div class="confirm-text">This entire deck and all its cards will be permanently deleted. This cannot be undone.</div>
-            <div class="confirm-footer">
-                <button class="btn" id="confirm-deck-cancel-btn">Cancel</button>
-                <button class="btn btn-danger" id="confirm-deck-delete-btn">Delete Deck</button>
+                <button class="btn btn-primary" id="modal-save-btn">Create Deck</button>
             </div>
         </div>
     </div>
 
     <script>
         const API_BASE = 'http://localhost:8000';
-        const deckId   = new URLSearchParams(window.location.search).get('deck_id');
 
-        // User initials
-        document.getElementById('user-initials').innerText =
-            localStorage.getItem('userInitials') || 'JD';
+        // Set user initials from storage
+        const initials = localStorage.getItem('userInitials') || 'JD';
+        document.getElementById('user-initials').innerText = initials;
 
         function authHeaders() {
             const token = localStorage.getItem('token');
             return {
                 'Content-Type': 'application/json',
-                'Accept':       'application/json',
+                'Accept': 'application/json',
                 ...(token ? { 'Authorization': `Bearer ${token}` } : {})
             };
         }
@@ -679,227 +728,88 @@
                 return;
             }
 
-            tbody.innerHTML = cards.map((card, i) => {
-                const q = (card.question ?? card.front ?? '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-                const a = (card.answer   ?? card.back  ?? '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            grid.innerHTML = decks.map(deck => {
+                const cards = deck.cards ?? deck.card_count ?? 0;
+                const due = deck.due ?? deck.due_count ?? 0;
+                const progress = deck.progress ?? 0;
                 return `
-                <tr>
-                    <td>${i + 1}</td>
-                    <td class="td-truncate">${card.question ?? card.front ?? ''}</td>
-                    <td class="td-truncate">${card.answer   ?? card.back  ?? ''}</td>
-                    <td>${card.last_reviewed ?? '—'}</td>
-                    <td>${card.next_interval ?? '—'}</td>
-                    <td>
-                        <div class="actions-cell">
-                            <button class="action-btn" title="Edit" onclick="openEditModal(${card.id}, '${q}', '${a}')">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                </svg>
-                            </button>
-                            <button class="action-btn danger" title="Delete" onclick="confirmDeleteCard(${card.id})">
-                                <svg viewBox="0 0 24 24">
-                                    <polyline points="3 6 5 6 21 6"/>
-                                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                                    <path d="M10 11v6"/><path d="M14 11v6"/>
-                                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-                                </svg>
-                            </button>
+                <div class="deck-card" onclick="window.location.href='deck.html?deck_id=${deck.id}'">
+                    <div class="deck-card-name">${deck.title}</div>
+                    <div class="deck-card-meta">${cards} cards · ${due} due</div>
+                    <div class="progress-row">
+                        <span>Progress</span>
+                        <span><strong>${progress}%</strong></span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width:${progress}%"></div>
+                    </div>
+                    <div class="deck-actions">
+                        <a href="study_session.html?deck_id=${deck.id}" class="deck-btn"
+                            onclick="event.stopPropagation()">Study Now</a>
+                        <button class="deck-btn deck-btn-outline"
+                            onclick="event.stopPropagation(); window.location.href='study_session.html?deck_id=${deck.id}&mode=cram'">
+                            Cram Mode
+                        </button>
+                        <div class="deck-btn-icon" onclick="event.stopPropagation(); window.location.href='deck.html?deck_id=${deck.id}'" title="Manage deck">
+                            <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
                         </div>
-                    </td>
-                </tr>`;
+                    </div>
+                </div>`;
             }).join('');
         }
 
-        async function loadCards() {
-            if (!deckId) { renderCards([]); return; }
-            try {
-                const cards = await fetchCards(deckId);
-                renderCards(cards);
-            } catch (err) {
-                document.getElementById('error-message').innerText = err.message;
-            }
+        async function init() {
+            allDecks = await fetchDecks();
+            renderDecks(allDecks);
         }
 
-        // ── Deck settings ──
-
-        async function loadDeck() {
-            if (!deckId) return;
-            const deck = await fetchDeck(deckId);
-            document.getElementById('deck-name').value = deck.title ?? '';
-            document.getElementById('deck-description').value = deck.description ?? '';
-            document.getElementById('breadcrumb-name').innerText = deck.title ?? `Deck #${deckId}`;
-            document.title = `ReviseWise – ${deck.title}`;
-        }
-
-        document.getElementById('save-deck-btn').addEventListener('click', async () => {
-            const title = document.getElementById('deck-name').value.trim();
-            const desc  = document.getElementById('deck-description').value.trim();
-            const btn   = document.getElementById('save-deck-btn');
-            const errEl = document.getElementById('error-message');
-
-            if (!title) { errEl.innerText = 'Deck name cannot be empty.'; return; }
-
-            btn.disabled = true;
-            btn.innerText = 'Saving…';
-            errEl.innerText = '';
-
-            try {
-                await saveDeck(deckId, title, desc);
-                document.getElementById('breadcrumb-name').innerText = title;
-                document.title = `ReviseWise – ${title}`;
-                btn.innerText = 'Saved ✓';
-                setTimeout(() => {
-                    btn.disabled = false;
-                    btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Changes`;
-                }, 2000);
-            } catch (err) {
-                errEl.innerText = err.message;
-                btn.disabled = false;
-                btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Changes`;
-            }
+        // Search
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            const q = e.target.value.toLowerCase();
+            renderDecks(allDecks.filter(d => d.title.toLowerCase().includes(q)));
         });
 
-        // ── Delete Deck ──
-        document.getElementById('delete-deck-btn').addEventListener('click', () => {
-            document.getElementById('confirm-deck-overlay').classList.add('open');
-        });
+        // Modal
+        const overlay    = document.getElementById('modal-overlay');
+        const modalError = document.getElementById('modal-error');
 
-        document.getElementById('confirm-deck-cancel-btn').addEventListener('click', () => {
-            document.getElementById('confirm-deck-overlay').classList.remove('open');
-        });
-
-        document.getElementById('confirm-deck-delete-btn').addEventListener('click', async () => {
-            const btn = document.getElementById('confirm-deck-delete-btn');
-            btn.disabled = true;
-            btn.innerText = 'Deleting…';
-            try {
-                await removeDeck(deckId);
-                window.location.href = 'dashboard.html';
-            } catch (err) {
-                document.getElementById('error-message').innerText = err.message;
-                document.getElementById('confirm-deck-overlay').classList.remove('open');
-                btn.disabled = false;
-                btn.innerText = 'Delete Deck';
-            }
-        });
-
-        // ── Card Modal ──
-        const modalOverlay = document.getElementById('modal-overlay');
-        const modalTitle   = document.getElementById('modal-title');
-        const modalFront   = document.getElementById('modal-front');
-        const modalBack    = document.getElementById('modal-back');
-        const modalError   = document.getElementById('modal-error');
-        const modalSaveBtn = document.getElementById('modal-save-btn');
-
-        let editingCardId = null;
-
-        function openAddModal() {
-            editingCardId = null;
-            modalTitle.innerText = 'Add Card';
-            modalFront.value = '';
-            modalBack.value  = '';
+        document.getElementById('new-deck-btn').addEventListener('click', () => {
+            document.getElementById('modal-name').value = '';
+            document.getElementById('modal-desc').value = '';
             modalError.innerText = '';
-            modalSaveBtn.innerText = 'Save Card';
-            modalOverlay.classList.add('open');
-            modalFront.focus();
-        }
+            overlay.classList.add('open');
+            document.getElementById('modal-name').focus();
+        });
 
-        function openEditModal(cardId, question, answer) {
-            editingCardId = cardId;
-            modalTitle.innerText = 'Edit Card';
-            modalFront.value = question;
-            modalBack.value  = answer;
-            modalError.innerText = '';
-            modalSaveBtn.innerText = 'Save Changes';
-            modalOverlay.classList.add('open');
-            modalFront.focus();
-        }
+        function closeModal() { overlay.classList.remove('open'); }
 
-        function closeModal() {
-            modalOverlay.classList.remove('open');
-            editingCardId = null;
-        }
-
-        document.getElementById('add-card-btn').addEventListener('click', openAddModal);
         document.getElementById('modal-close-btn').addEventListener('click', closeModal);
         document.getElementById('modal-cancel-btn').addEventListener('click', closeModal);
-        modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
 
-        modalSaveBtn.addEventListener('click', async () => {
-            const question = modalFront.value.trim();
-            const answer   = modalBack.value.trim();
+        document.getElementById('modal-save-btn').addEventListener('click', async () => {
+            const title = document.getElementById('modal-name').value.trim();
+            const desc  = document.getElementById('modal-desc').value.trim();
 
-            if (!question || !answer) {
-                modalError.innerText = 'Both fields are required.';
-                return;
-            }
+            if (!title) { modalError.innerText = 'Deck name is required.'; return; }
 
-            modalSaveBtn.disabled  = true;
-            modalSaveBtn.innerText = 'Saving…';
-            modalError.innerText   = '';
-
-            try {
-                if (editingCardId) {
-                    await updateCard(editingCardId, question, answer);
-                } else {
-                    await createCard(question, answer);
-                }
-                closeModal();
-                await loadCards();
-            } catch (err) {
-                modalError.innerText = err.message;
-            } finally {
-                modalSaveBtn.disabled  = false;
-                modalSaveBtn.innerText = editingCardId ? 'Save Changes' : 'Save Card';
-            }
-        });
-
-        // ── Delete Card Confirm ──
-        let deletingCardId = null;
-
-        function confirmDeleteCard(cardId) {
-            deletingCardId = cardId;
-            document.getElementById('confirm-overlay').classList.add('open');
-        }
-
-        document.getElementById('confirm-cancel-btn').addEventListener('click', () => {
-            document.getElementById('confirm-overlay').classList.remove('open');
-            deletingCardId = null;
-        });
-
-        document.getElementById('confirm-delete-btn').addEventListener('click', async () => {
-            if (!deletingCardId) return;
-            const btn = document.getElementById('confirm-delete-btn');
+            const btn = document.getElementById('modal-save-btn');
             btn.disabled = true;
-            btn.innerText = 'Deleting…';
+            btn.innerText = 'Creating…';
 
-            try {
-                await deleteCard(deletingCardId);
-                document.getElementById('confirm-overlay').classList.remove('open');
-                deletingCardId = null;
-                await loadCards();
-            } catch (err) {
-                document.getElementById('error-message').innerText = err.message;
-                document.getElementById('confirm-overlay').classList.remove('open');
-            } finally {
-                btn.disabled = false;
-                btn.innerText = 'Delete';
-            }
+            const deck = await createDeck(title, desc);
+            allDecks.unshift({ ...deck, cards: 0, due: 0, progress: 0 });
+            renderDecks(allDecks);
+            closeModal();
+
+            btn.disabled = false;
+            btn.innerText = 'Create Deck';
+
+            // Navigate to the new deck
+            window.location.href = `deck.html?deck_id=${deck.id}`;
         });
 
-        // Keyboard shortcut: Esc closes modals
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                closeModal();
-                document.getElementById('confirm-overlay').classList.remove('open');
-                document.getElementById('confirm-deck-overlay').classList.remove('open');
-            }
-        });
-
-        // ── Init ──
-        loadDeck();
-        loadCards();
+        init();
     </script>
 </body>
 </html>
