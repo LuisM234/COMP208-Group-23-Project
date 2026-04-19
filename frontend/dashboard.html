@@ -827,7 +827,7 @@
                 const due = deck.due ?? deck.due_count ?? 0;
                 const progress = deck.progress ?? 0;
                 return `
-                <div class="deck-card" onclick="window.location.href='deck.html?deck_id=${deck.id}'">
+                <div class="deck-card" onclick="openDeck(${deck.id})">
                     <div class="deck-card-name">${deck.title}</div>
                     <div class="deck-card-meta">${cards} cards · ${due} due</div>
                     <div class="progress-row">
@@ -838,11 +838,11 @@
                         <div class="progress-fill" style="width:${progress}%"></div>
                     </div>
                     <div class="deck-actions">
-                        <a href="study_session.html?deck_id=${deck.id}" class="deck-btn" onclick="event.stopPropagation()">Study Now</a>
-                        <button class="deck-btn deck-btn-outline" onclick="event.stopPropagation(); window.location.href='deck.html?deck_id=${deck.id}'">
+                        <a href="study_session.html?deck_id=${deck.id}" class="deck-btn" onclick="event.stopPropagation(); recordRecentDeck(${deck.id})">Study Now</a>
+                        <button class="deck-btn deck-btn-outline" onclick="event.stopPropagation(); openDeck(${deck.id})">
                             Open Deck
                         </button>
-                        <div class="deck-btn-icon" onclick="event.stopPropagation(); window.location.href='deck.html?deck_id=${deck.id}'" title="Manage deck">
+                        <div class="deck-btn-icon" onclick="event.stopPropagation(); openDeck(${deck.id})" title="Manage deck">
                             <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
                         </div>
                         <div class="deck-btn-icon" onclick="event.stopPropagation(); confirmDeleteDeck(${deck.id}, '${deck.title.replace(/'/g,"\\'")}');" title="Delete deck" style="margin-left:0">
@@ -867,11 +867,29 @@
             document.getElementById('stat-due-sub').innerText = `Across ${decks.length} deck${decks.length !== 1 ? 's' : ''}`;
         }
 
+        function recordRecentDeck(id) {
+            let recent = JSON.parse(localStorage.getItem('recentDecks') || '[]');
+            recent = [id, ...recent.filter(r => r !== id)];
+            recent = recent.slice(0, 3);
+            localStorage.setItem('recentDecks', JSON.stringify(recent));
+        }
+
+        function openDeck(id) {
+            recordRecentDeck(id);
+            window.location.href = `deck.html?deck_id=${id}`;
+        }
+
         async function init() {
             try {
                 allDecks = await fetchDecks();
                 if (!allDecks) return;
-                renderDecks(allDecks);
+
+                const recentIds = JSON.parse(localStorage.getItem('recentDecks') || '[]');
+                const recentDecks = recentIds
+                    .map(id => allDecks.find(d => d.id === id))
+                    .filter(Boolean);
+
+                renderDecks(recentDecks.length ? recentDecks : allDecks.slice(0, 3));
                 updateStats(allDecks);
             } catch (err) {
                 document.getElementById('deck-grid').innerHTML =
@@ -879,40 +897,48 @@
             }
         }
 
-        // Search
-        document.getElementById('search-input').addEventListener('input', (e) => {
-            const q = e.target.value.toLowerCase();
-            renderDecks(allDecks.filter(d => d.title.toLowerCase().includes(q)));
-        });
+        // Search (only attach if element exists)
+        const searchInput = document.getElementById('search-input');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                const q = e.target.value.toLowerCase();
+                renderDecks(allDecks.filter(d => d.title.toLowerCase().includes(q)));
+            });
+        }
 
-        // Modal
+        // Modal (all wrapped in null checks since these elements may not exist on dashboard)
         const overlay    = document.getElementById('modal-overlay');
         const modalError = document.getElementById('modal-error');
 
-        document.getElementById('new-deck-btn').addEventListener('click', () => {
+        function closeModal() { if (overlay) overlay.classList.remove('open'); }
+
+        const newDeckBtn = document.getElementById('new-deck-btn');
+        if (newDeckBtn) newDeckBtn.addEventListener('click', () => {
             document.getElementById('modal-name').value = '';
             document.getElementById('modal-desc').value = '';
-            modalError.innerText = '';
+            if (modalError) modalError.innerText = '';
             overlay.classList.add('open');
             document.getElementById('modal-name').focus();
         });
 
-        function closeModal() { overlay.classList.remove('open'); }
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+        if (modalCloseBtn) modalCloseBtn.addEventListener('click', closeModal);
 
-        document.getElementById('modal-close-btn').addEventListener('click', closeModal);
-        document.getElementById('modal-cancel-btn').addEventListener('click', closeModal);
-        overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+        const modalCancelBtn = document.getElementById('modal-cancel-btn');
+        if (modalCancelBtn) modalCancelBtn.addEventListener('click', closeModal);
 
-        document.getElementById('modal-save-btn').addEventListener('click', async () => {
+        if (overlay) overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+
+        const modalSaveBtn = document.getElementById('modal-save-btn');
+        if (modalSaveBtn) modalSaveBtn.addEventListener('click', async () => {
             const title = document.getElementById('modal-name').value.trim();
             const desc  = document.getElementById('modal-desc').value.trim();
 
-            if (!title) { modalError.innerText = 'Deck name is required.'; return; }
+            if (!title) { if (modalError) modalError.innerText = 'Deck name is required.'; return; }
 
-            const btn = document.getElementById('modal-save-btn');
-            btn.disabled = true;
-            btn.innerText = 'Creating…';
-            modalError.innerText = '';
+            modalSaveBtn.disabled = true;
+            modalSaveBtn.innerText = 'Creating…';
+            if (modalError) modalError.innerText = '';
 
             try {
                 const deck = await createDeck(title, desc);
@@ -922,10 +948,10 @@
                 closeModal();
                 window.location.href = `my_decks.html?deck_id=${deck.id}`;
             } catch (err) {
-                modalError.innerText = err.message;
+                if (modalError) modalError.innerText = err.message;
             } finally {
-                btn.disabled = false;
-                btn.innerText = 'Create Deck';
+                modalSaveBtn.disabled = false;
+                modalSaveBtn.innerText = 'Create Deck';
             }
         });
 
