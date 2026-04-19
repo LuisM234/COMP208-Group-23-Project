@@ -368,7 +368,7 @@ class AIGenerationRun(Model):
     model_name = fields.CharField(max_length=64, default="gemini")
     # Allowed values: pending | success | failed | rate_limited | invalid_json
     status = fields.CharField(max_length=24, default="pending")
-    error_code = fields.CharField(max_length=64, null=True)
+    error_code = fields.IntField(max_length=64, null=True)
     error_message = fields.TextField(null=True)
     raw_response = fields.TextField(null=True)
     created_at = fields.DatetimeField(default=utc_now)
