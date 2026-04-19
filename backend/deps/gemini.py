@@ -22,7 +22,11 @@ class MCQQuestion(BaseModel):
     """Model for a multiple-choice question with options and the correct answer."""
 
     question: str
-    options: list[str]
+    option_a: str
+    option_b: str
+    option_c: str
+    option_d: str
+
     correct_answer: str
     explanation: str
 
