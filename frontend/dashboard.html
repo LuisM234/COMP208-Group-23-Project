@@ -790,7 +790,18 @@
             const res = await fetch(`${API_BASE}/decks/`, { headers: authHeaders() });
             if (res.status === 401) { window.location.href = 'index.html'; return []; }
             if (!res.ok) throw new Error(`Failed to load decks (${res.status})`);
-            return await res.json();
+            const decks = await res.json();
+
+            // Fetch actual card counts for each deck (same as my_decks.html)
+            return await Promise.all(decks.map(async (deck) => {
+                try {
+                    const cr = await fetch(`${API_BASE}/decks/${deck.id}/cards`, { headers: authHeaders() });
+                    const cards = cr.ok ? await cr.json() : [];
+                    return { ...deck, cards: cards.length };
+                } catch {
+                    return { ...deck, cards: 0 };
+                }
+            }));
         }
 
         async function createDeck(title, description) {
