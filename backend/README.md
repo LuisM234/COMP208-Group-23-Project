@@ -4,6 +4,20 @@
     <strong>The backend of the flashcards project.</strong>
 </p>
 
+- [Development](#development)
+  - [Setting up access to the repo](#setting-up-access-to-the-repo)
+  - [Cloning the repo](#cloning-the-repo)
+  - [Prerequisites](#prerequisites)
+  - [Adding and removing a new package/library](#adding-and-removing-a-new-packagelibrary)
+    - [After changing dependencies](#after-changing-dependencies)
+    - [After pulling changes via `git pull`](#after-pulling-changes-via-git-pull)
+  - [Running the backend API](#running-the-backend-api)
+    - [Setting up your environment variables](#setting-up-your-environment-variables)
+    - [Development](#development-1)
+    - [Production](#production)
+  - [Shutting down the API](#shutting-down-the-api)
+  - [Understanding backend structure](#understanding-backend-structure)
+
 ## Development
 ### Setting up access to the repo
 Because the repo is **private**, you may need to setup a **PAT** (Personal Access Token) or an **SSH key** for your GitHub account.
@@ -75,13 +89,13 @@ to keep your environment up to date.
 ### Running the backend API
 To test your changes it's ideal to use the development way.
 
-#### Setting up your enviornment variables
+#### Setting up your environment variables
 Into an `.env` file:
 - Insert your database URL with the key `DATABASE_URL`.
 - Insert your Gemini API key with the key `GEMINI_API_KEY`.
 
 Example:
-```toml
+```py
 DATABASE_URL=mysql://...
 GEMINI_API_KEY=FooBar
 ```
