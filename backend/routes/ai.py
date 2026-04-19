@@ -209,6 +209,7 @@ async def generate_mcq(
                 "status": response.status,
                 "error_code": response.error_code,
                 "error_message": response.error_message,
+                "raw_response": response.raw_response,
             }
         )
         await generation_run.save()
@@ -249,6 +250,7 @@ async def generate_mcq(
             "status": "success",
             "error_code": None,
             "error_message": None,
+            "raw_response": response.raw_response,
         }
     )
     await generation_run.save()
