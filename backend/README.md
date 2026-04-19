@@ -75,6 +75,19 @@ to keep your environment up to date.
 ### Running the backend API
 To test your changes it's ideal to use the development way.
 
+#### Setting up your enviornment variables
+Into an `.env` file:
+- Insert your database URL with the key `DATABASE_URL`.
+- Insert your Gemini API key with the key `GEMINI_API_KEY`.
+
+Example:
+```toml
+DATABASE_URL=mysql://...
+GEMINI_API_KEY=FooBar
+```
+
+The API should pick it up in `deps/model.py` and `deps/gemini.py`.
+
 #### Development
 Run this in your terminal (in the backend folder):
 ```bash
@@ -133,9 +146,4 @@ If this makes 0 sense, refer to these docs about FastAPI: https://fastapi.tiango
 
 And probably have a look around the different sections of the library (or ask AI to be honest)
 
-### How to use the database
-Database stuff coming soon, once we figure out how to implement it.
-
-Ideally we (Treasure, Charles) were thinking to use a cloud database, such as [TIDB](https://www.pingcap.com/).
-
-We can host the backend on our machines, and have the database in the cloud so we don't have to worry about hosting the entire system anywhere. This is subject to change if anyone has any other ideas.
+~~We can host the backend on our machines, and have the database in the cloud so we don't have to worry about hosting the entire system anywhere. This is subject to change if anyone has any other ideas.~~
