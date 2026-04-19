@@ -270,7 +270,19 @@ async def generate_mcq(
 
  
     
+class CardResponesRequest(BaseModel):
+    """Body model for the /generate-mcq endpoint."""
+    
+    deck_id: int = Field(
+        ge=1,  # greater than or equal to
+        description="ID of the deck to use.",
+    )
 
+    notes: str | None = Field(
+        default=None, 
+        min_length=1, 
+        description="Raw notes to generate questions from. If not provided, the deck's cards are used."
+    )
 
 
 

@@ -71,7 +71,7 @@ class GeminiWrapper:
 
     async def generate_flashcards(
         self, notes: str, num_cards: int
-    ) -> list[Flashcard]:
+    ) -> tuple[list[Flashcard] | None, GeminiResponse]:
         """Generates flashcards from notes using Gemini API.
         
         Parameters
