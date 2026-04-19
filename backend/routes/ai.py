@@ -193,6 +193,8 @@ async def generate_mcq(
         input_type="notes" if notes else "deck",
         requested_count=num_questions,
         difficulty=difficulty,
+        user=current_user,
+        deck=deck,
     )
 
     generated, response = await gemini_wrapper.generate_mcq_questions(

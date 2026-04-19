@@ -513,7 +513,9 @@
   </main>
 
   <script>
-    const API     = 'http://localhost:8000';
+    const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:8000'
+        : 'https://comp208-group-23-project-production.up.railway.app';
     const DECK_ID = new URLSearchParams(window.location.search).get('deck_id') || 2;
 
     document.getElementById('user-initials').innerText =
