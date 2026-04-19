@@ -164,7 +164,7 @@ class StudyProgress(Model):
         indexes = (("user", "next_review"),)
 
     def __str__(self) -> str:
-        return f"StudyProgress(id={self.id}, user_id={self.user_id}, card_id={self.card_id})"
+        return f"StudyProgress(id={self.id}, user_id={self.user.id}, card_id={self.card.id})"
 
 
 # --------------------------------------------------------------
@@ -266,8 +266,8 @@ class DeckDailyActivity(Model):
 
     def __str__(self) -> str:
         return (
-            f"DeckDailyActivity(id={self.id}, user_id={self.user_id}, "
-            f"deck_id={self.deck_id}, date={self.date.isoformat()})"
+            f"DeckDailyActivity(id={self.id}, user_id={self.user.id}, "
+            f"deck_id={self.deck.id}, date={self.date.isoformat()})"
         )
 
 
@@ -313,7 +313,7 @@ class ReviewEvent(Model):
 
     def __str__(self) -> str:
         return (
-            f"ReviewEvent(id={self.id}, user_id={self.user_id}, card_id={self.card_id}, "
+            f"ReviewEvent(id={self.id}, user_id={self.user.id}, card_id={self.card.id}, "
             f"correct={self.correct})"
         )
 
@@ -344,7 +344,7 @@ class UserSettings(Model):
 
     def __str__(self) -> str:
         return (
-            f"UserSettings(id={self.id}, user_id={self.user_id}, "
+            f"UserSettings(id={self.id}, user_id={self.user.id}, "
             f"review_batch_size={self.review_batch_size})"
         )
 
@@ -400,6 +400,6 @@ class AIGenerationRun(Model):
 
     def __str__(self) -> str:
         return (
-            f"AIGenerationRun(id={self.id}, user_id={self.user_id}, kind={self.kind!r}, "
+            f"AIGenerationRun(id={self.id}, user_id={self.user.id}, kind={self.kind!r}, "
             f"status={self.status!r})"
         )
