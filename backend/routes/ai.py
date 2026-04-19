@@ -6,7 +6,7 @@ from deps.gemini import GeminiWrapper, get_gemini_wrapper
 from fastapi.responses import ORJSONResponse
 from pydantic import BaseModel, Field, model_validator, field_validator
 from deps.security import get_current_user
-from deps.database import Card, Deck, User, MCQQuestion
+from deps.database import Card, Deck, User, MCQQuestion, AIGenerationRun
 from deps.gemini import Flashcard
 from deps.gemini import GeminiHTTPException
 
@@ -187,18 +187,37 @@ async def generate_mcq(
             f"Q: {card.question}\nA: {card.answer}"
             for card in deck_cards
         )
+        
+    generation_run = AIGenerationRun(
+        kind="mcq",
+        input_type="notes" if notes else "deck",
+        requested_count=num_questions,
+        difficulty=difficulty,
+    )
 
-    try:
-        response = await gemini_wrapper.generate_mcq_questions(
-            notes=source_notes,
-            num_questions=num_questions,
-            difficulty=difficulty,
+    generated, response = await gemini_wrapper.generate_mcq_questions(
+        notes=source_notes,
+        num_questions=num_questions,
+        difficulty=difficulty,
+    )
+    if generated is None:
+        generation_run.update_from_dict(
+            {
+                "model_name": response.model_name,
+                "status": response.status,
+                "error_code": response.error_code,
+                "error_message": response.error_message,
+            }
         )
-    except HTTPException as exc:
-        raise exc
+        await generation_run.save()
+
+        raise HTTPException(
+            status_code=502,
+            detail=f"Gemini API error: {response.error_message or 'Unknown error'}",
+        )
     
     valid_questions: list[MCQQuestion] = []
-    for q in response:
+    for q in generated:
         question = q.question.strip()
         options = [q.option_a.strip(), q.option_b.strip(), q.option_c.strip(), q.option_d.strip()]
         correct_answer = q.correct_answer.strip().upper()
@@ -222,6 +241,15 @@ async def generate_mcq(
         raise HTTPException(status_code=502, detail="Gemini did not return any valid questions")
     
     await MCQQuestion.bulk_create(valid_questions)
+    generation_run.update_from_dict(
+        {
+            "model_name": response.model_name,
+            "status": "success",
+            "error_code": None,
+            "error_message": None,
+        }
+    )
+    await generation_run.save()
 
     return [
         MCQQuestionResponse(
