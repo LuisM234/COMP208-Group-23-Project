@@ -1,8 +1,8 @@
 from typing import Any, Literal
 
 import orjson
-from fastapi import APIRouter, HTTPException, Request, Depends
-from deps.gemini import GeminiWrapper, get_gemini_wrapper, MCQQuestion as MCQQuestionModel
+from fastapi import APIRouter, HTTPException, Depends
+from deps.gemini import GeminiWrapper, get_gemini_wrapper
 from fastapi.responses import ORJSONResponse
 from pydantic import BaseModel, Field, model_validator
 from deps.security import get_current_user
@@ -178,45 +178,43 @@ async def generate_mcq(
     except HTTPException as exc:
         raise exc
     
-    valid_questions: list[MCQQuestionModel] = []
-    
-    for question in response:
-        if not question.question.strip():
+    valid_questions: list[MCQQuestion] = []
+    for q in response:
+        if not q.question.strip():
             continue
         
-        if len(question.options) != 4:
+        if len(q.options) != 4:
             continue
         
-        for option in question.options:
+        for option in q.options:
             if not option.strip():
                 continue
             
-        if not question.explanation.strip():
+        if q.correct_answer.lower() not in ["a", "b", "c", "d"]:
+            continue
+            
+        if not q.explanation.strip():
             continue
         
-        valid_questions.append(question)
+        valid_questions.append(
+            MCQQuestion(
+                question=q.question,
+                option_a=q.options[0],
+                option_b=q.options[1],
+                option_c=q.options[2],
+                option_d=q.options[3],
+                correct_answer=q.correct_answer,
+                explanation=q.explanation,
+                difficulty=difficulty,
+                deck=deck,
+            )
+        )
         
     if not valid_questions:
         raise HTTPException(status_code=502, detail="Gemini did not return any valid questions")
     
-    questions = [
-        MCQQuestion(
-            question=q.question.strip(),
-            option_a=q.options[0].strip(),
-            option_b=q.options[1].strip(),
-            option_c=q.options[2].strip(),
-            option_d=q.options[3].strip(),
-            correct_answer=q.correct_answer.strip(),
-            explanation=q.explanation.strip(),
-            difficulty=difficulty,
-            deck=deck,
-        )
-        for q in valid_questions
-    ]
-    
-    await MCQQuestion.bulk_create(questions)
-    
-    return questions
+    await MCQQuestion.bulk_create(valid_questions)
+    return valid_questions
     
 
 # defines a POST endpoint at /generate-cards
