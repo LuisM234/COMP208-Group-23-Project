@@ -502,20 +502,104 @@
       <a href="#" class="top-link">Community</a>
       <a href="progress.html" class="top-link">Progress</a>
     </div>
-                <div class="avatar-wrapper" id="avatar-wrapper">
-            <div class="nav-avatar" id="user-initials" onclick="document.getElementById('avatar-dropdown').classList.toggle('open');event.stopPropagation();">JD</div>
-            <div class="avatar-dropdown" id="avatar-dropdown" onclick="event.stopPropagation();">
-                <a href="#">
-                    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    Account
-                </a>
-                <div class="dropdown-divider"></div>
-                <button class="danger" onclick="localStorage.removeItem('token');localStorage.removeItem('userInitials');window.location.href='index.html';">
-                    <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                    Log out
-                </button>
-            </div>
+    <div class="nav-avatar" id="user-initials">JD</div>
+  </nav>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="session-wrap" id="app">
+      <div style="text-align:center;color:#aaa;padding:60px 0">Loading cards…</div>
+    </div>
+  </main>
+
+  <script>
+    const API     = 'http://localhost:8000';
+    const DECK_ID = new URLSearchParams(window.location.search).get('deck_id') || 2;
+
+    document.getElementById('user-initials').innerText =
+      localStorage.getItem('userInitials') || 'JD';
+
+    let cards     = [];
+    let idx       = 0;
+    let flipped   = false;
+    let deckTitle = 'Study Session';
+    let deckSub   = '';
+
+    function authHdr() {
+      const t = localStorage.getItem('token');
+      return { 'Content-Type': 'application/json', ...(t ? { 'Authorization': `Bearer ${t}` } : {}) };
+    }
+
+    async function init() {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) { window.location.href = 'index.html'; return; }
+
+        const dr = await fetch(`${API}/decks/${DECK_ID}`, { headers: authHdr() });
+        if (dr.status === 401) { window.location.href = 'index.html'; return; }
+        if (dr.ok) { const d = await dr.json(); deckTitle = d.title || 'Study Session'; deckSub = d.description || ''; }
+
+        const cr = await fetch(`${API}/decks/${DECK_ID}/cards`, { headers: authHdr() });
+        if (cr.ok) {
+          cards = await cr.json();
+        } else {
+          throw new Error(`Could not load cards (${cr.status})`);
+        }
+      } catch (err) {
+        document.getElementById('app').innerHTML =
+          `<div style="text-align:center;color:#dc3545;padding:60px 0">⚠️ ${err.message}<br><a href="dashboard.html" style="color:#111;margin-top:12px;display:inline-block">← Back to Dashboard</a></div>`;
+        return;
+      }
+      render();
+    }
+
+    /* ── Render ── */
+    function render() {
+      if (!cards.length) { renderEmpty(); return; }
+      if (idx >= cards.length) { renderDone(); return; }
+      renderCard();
+    }
+
+    function renderCard() {
+      const card = cards[idx];
+      const pct  = Math.round((idx / cards.length) * 100);
+
+      document.getElementById('app').innerHTML = `
+        <div class="session-header">
+          <div>
+            <div class="session-title">Study Session</div>
+            <div class="session-subtitle">${deckTitle}</div>
+          </div>
+          <a href="javascript:history.back()" class="close-btn" title="Exit">✕</a>
         </div>
+
+        <div class="progress-row">
+          <span>Card ${idx + 1} of ${cards.length}</span>
+          <span>${pct}%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" style="width:${pct}%"></div>
+        </div>
+
+        <div class="card-scene">
+          <div class="card-flipper${flipped ? ' is-flipped' : ''}" id="card-flipper" onclick="handleCardClick(event)">
+
+            <!-- FRONT -->
+            <div class="card-face">
+              <span class="badge badge-q">Question</span>
+              <div class="question-text">${card.question ?? card.front ?? ''}</div>
+              <button class="show-btn" onclick="event.stopPropagation(); reveal()">Show Answer</button>
+            </div>
+
+            <!-- BACK -->
+            <div class="card-face card-back-face">
+              <span class="badge badge-a">Answer</span>
+              <div class="q-small">${card.question ?? card.front ?? ''}</div>
+              <div class="answer-divider"></div>
+              <div class="answer-text">${card.answer ?? card.back ?? ''}</div>
+            </div>
+
+          </div>
         </div>
   </nav>
 
@@ -627,9 +711,4 @@
     init();
   </script>
 </body>
-</html>                document.addEventListener('click', () => {
-            const dd = document.getElementById('avatar-dropdown');
-            if (dd) dd.classList.remove('open');
-        });
-
-
+</html>
