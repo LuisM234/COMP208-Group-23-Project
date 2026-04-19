@@ -35,6 +35,7 @@ app.add_middleware(
         "http://localhost:8080",
         "http://127.0.0.1:8080",
         "null",  # allows file:// origin (browsers send Origin: null for local files)
+        "https://startling-chaja-8dedf0.netlify.app", # production frontend
     ],
     allow_credentials=True,
     allow_methods=["*"],
