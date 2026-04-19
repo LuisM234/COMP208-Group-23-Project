@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import Optional
 from deps.database import Deck
 from deps.security import get_current_user
+from datetime import datetime
 
 decks_route = APIRouter(prefix="/decks", tags=["Decks"])
 
@@ -24,6 +25,20 @@ class DeckResponse(BaseModel):
     title: str
     description: str
 
+class DeckMCQsResponse(BaseModel):
+    id: int
+
+    question: str
+    option_a: str
+    option_b: str
+    option_c: str
+    option_d: str
+    
+    correct_answer: str
+    explanation: str | None = None
+    difficulty: str | None = None
+    
+    created_at: datetime
 
 # ──────────────────────────────────────────────
 # Helper
@@ -68,6 +83,31 @@ async def get_deck(deck_id: int, user=Depends(get_current_user)):
     deck = await get_deck_for_user(deck_id, user.id)
     return DeckResponse(id=deck.id, title=deck.title, description=deck.description)
 
+@decks_route.get("/{deck_id}/mcqs")
+async def get_deck_mcqs(deck_id: int, user=Depends(get_current_user)) -> list[DeckMCQsResponse]:
+    """Get a list of all MCQs in a deck.
+    
+    Request Body:
+    - **deck_id**: (`int`)
+    The ID of the deck to fetch MCQs from.
+    """
+    deck = await get_deck_for_user(deck_id, user.id)
+    mcqs = await deck.mcq_questions.all()
+    return [
+        DeckMCQsResponse(
+            id=mcq.id,
+            question=mcq.question,
+            option_a=mcq.option_a,
+            option_b=mcq.option_b,
+            option_c=mcq.option_c,
+            option_d=mcq.option_d,
+            correct_answer=mcq.correct_answer,
+            explanation=mcq.explanation,
+            difficulty=mcq.difficulty,
+            created_at=mcq.created_at
+        ) 
+        for mcq in mcqs
+    ]
 
 @decks_route.put("/{deck_id}", response_model=DeckResponse)
 async def update_deck(deck_id: int, payload: DeckUpdate, user=Depends(get_current_user)):
