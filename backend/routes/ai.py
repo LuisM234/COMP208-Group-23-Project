@@ -249,6 +249,17 @@ async def generate_cards(
     #make a variable to store flashcards
     # await tells the program to stop specific task to let other taks run unitl ai finishes generating the cards
     # notes is from the request body, num_cards is also from the request body, we would pass these to the gemini wrapper which would call the gemini api and return a list of flashcards
+    try:
+        flashcards, generation_run = await gemini.generate_flashcards(
+            notes=cards_request.notes,
+            num_cards=cards_request.num_cards,
+            user_id=current_user.id,
+            deck_id=deck.id,
+        )
+    except GeminiHTTPException:
+        raise
+
+    
 
 
 
@@ -263,27 +274,22 @@ async def generate_cards(
             answer=fc.answer,
             deck_id=deck.id,
             is_ai_generated=True,
+            generation_run_id=generation_run.id,
         )
         created_cards.append(card)
 
-    # returns an orjson response 
-    return created_cards(
-        # will contain a list of card objects
-        # unique id for card, question, answer, deck_id, and is_ai_generated boolean
-        content={
-            "cards": [
-                {
-                    "id": card.id,
-                    "question": card.question,
-                    "answer": card.answer,
-                    "deck_id": card.deck_id,
-                    "is_ai_generated": card.is_ai_generated,
-                }
-                # loop through each card in created_cards list
-                for card in created_cards
-            ]
-        }
-    )
+    # # will contain a list of card objects
+    # unique id for card, question, answer, deck_id, and is_ai_generated boolean 
+    return [
+        (
+            card.id,
+            card.question,
+            card.answer,
+            card.deck_id,
+            card.is_ai_generated,
+        )
+        for card in created_cards
+    ]
 
 
     
