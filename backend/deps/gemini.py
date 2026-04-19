@@ -4,12 +4,10 @@ from typing import cast
 from fastapi import HTTPException, status
 from google import genai
 from google.genai import errors, types
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 
 from deps.database import AIGenerationRun
-
-
 
 
 class Flashcard(BaseModel):
@@ -18,13 +16,24 @@ class Flashcard(BaseModel):
     question: str
     answer: str
     
-class MCQQuestion(BaseModel):
+class GeneratedMCQ(BaseModel):
     """Model for a multiple-choice question with options and the correct answer."""
 
     question: str
-    options: list[str]
+    option_a: str
+    option_b: str
+    option_c: str
+    option_d: str
+
     correct_answer: str
     explanation: str
+    
+class GeminiResponse(BaseModel):
+    model_name: str
+    status: str
+    error_code: int | None
+    error_message: str | None
+    raw_response: str | None
 
 
 class GeminiHTTPException(HTTPException):
@@ -158,7 +167,7 @@ class GeminiWrapper:
         notes: str,
         num_questions: int,
         difficulty: str,
-    ) -> list[MCQQuestion]:
+    ) -> tuple[list[GeneratedMCQ] | None, GeminiResponse]:
         """Generates multiple-choice questions from notes using Gemini API.
         
         Parameters
@@ -178,7 +187,7 @@ class GeminiWrapper:
             ),
             temperature=0.3,
             response_mime_type="application/json",
-            response_schema=list[MCQQuestion],
+            response_schema=list[GeneratedMCQ],
         )
 
         http_options = types.HttpOptions(
@@ -197,40 +206,78 @@ class GeminiWrapper:
                     config=config,
                 )
         except errors.APIError as exc:
-            code = exc.code
-            if code == status.HTTP_429_TOO_MANY_REQUESTS:
-                raise HTTPException(
-                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                    detail="Gemini rate limit exceeded",
-                ) from None
-
-            raise HTTPException(
-                status_code=status.HTTP_502_BAD_GATEWAY,
-                detail=f"Gemini error ({code})",
-            ) from None
-
-        except Exception:
-            raise HTTPException(
-                status_code=status.HTTP_502_BAD_GATEWAY,
-                detail="Failed to contact Gemini",
-            ) from None
-
-        model_text = response.text
-        if not model_text or not model_text.strip():
-            raise HTTPException(
-                status_code=status.HTTP_502_BAD_GATEWAY,
-                detail="Not expected response from Gemini",
+            status_name = (
+                "rate_limited"
+                if exc.code == status.HTTP_429_TOO_MANY_REQUESTS
+                else "failed"
+            )
+            return None, GeminiResponse(
+                model_name=self.model,
+                status=status_name,
+                error_code=exc.code,
+                error_message=exc.message,
+                raw_response=str(exc.response)
             )
 
-        if not response.parsed:
-            raise HTTPException(
-                status_code=status.HTTP_502_BAD_GATEWAY,
-                detail="Gemini response is not valid JSON",
-            ) from None
+        except Exception as exc:
+            return None, GeminiResponse(
+                model_name=self.model,
+                status="failed",
+                error_code=None,
+                error_message="Unknown error occurred while contacting Gemini",
+                raw_response=str(exc),
+            )
 
-        parsed = cast(list[MCQQuestion], response.parsed)
-        return parsed
+        raw_text = response.text
+        if not raw_text or not raw_text.strip():
+            return None, GeminiResponse(
+                model_name=self.model,
+                status="failed",
+                error_code=None,
+                error_message="Empty response from Gemini",
+                raw_response=raw_text,
+            )
+        
+        parsed = response.parsed
+        if not parsed:
+            return None, GeminiResponse(
+                model_name=self.model,
+                status="invalid_json",
+                error_code=None,
+                error_message="Gemini response is not valid JSON",
+                raw_response=raw_text,
+            )
+            
+        try:
+            validated = [
+                GeneratedMCQ.model_validate(item) 
+                for item in cast(list[object], parsed)
+            ]
+        except ValidationError as exc:
+            return None, GeminiResponse(
+                model_name=self.model,
+                status="invalid_json",
+                error_code=None,
+                error_message=f"Schema validation failed: {exc}",
+                raw_response=raw_text,
+            )
+            
+        if len(validated) != num_questions:
+            return None, GeminiResponse(
+                model_name=self.model,
+                status="invalid_json",
+                error_code=None,
+                error_message=f"Expected {num_questions} questions, got {len(validated)}",
+                raw_response=raw_text,
+            )
 
+        return validated, GeminiResponse(
+            model_name=self.model,
+            status="success",
+            error_code=None,
+            error_message=None,
+            raw_response=raw_text,
+        )
 
 # a depenency function to show the gemin wrapper
 # checks if the api for two environment variable names
