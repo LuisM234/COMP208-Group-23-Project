@@ -4,7 +4,7 @@ import orjson
 from fastapi import APIRouter, HTTPException, Depends
 from deps.gemini import GeminiWrapper, get_gemini_wrapper
 from fastapi.responses import ORJSONResponse
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, model_validator, field_validator
 from deps.security import get_current_user
 from deps.database import Card, Deck, User, MCQQuestion
 from deps.gemini import Flashcard
@@ -12,14 +12,16 @@ from deps.gemini import GeminiHTTPException
 
 class MCQRequest(BaseModel):
     """Body model for the /generate-mcq endpoint."""
-
-    notes: str | None = Field(
-        default=None, min_length=1, description="Raw notes to generate questions from."
-    )
-
+    
     deck_id: int = Field(
         ge=1,  # greater than or equal to
         description="ID of the deck to use.",
+    )
+
+    notes: str | None = Field(
+        default=None, 
+        min_length=1, 
+        description="Raw notes to generate questions from. If not provided, the deck's cards are used."
     )
 
     num_questions: int = Field(
@@ -33,13 +35,18 @@ class MCQRequest(BaseModel):
         default="medium", description="Difficulty level of the questions."
     )
 
-    @model_validator(mode="after")
-    def validate_source(self) -> "MCQRequest":
-        """Ensures that notes is provided."""
-        if self.notes is not None and not self.notes.strip():
+    @field_validator("notes")
+    @classmethod
+    def validate_notes(cls, value: str | None) -> str | None:
+        """Ensures that if notes is provided, it is not just whitespace."""
+        if value is None:
+            return None
+
+        value = value.strip()
+        if not value:
             raise ValueError("Provide non-empty notes")
 
-        return self
+        return value
     
 class MCQQuestionResponse(BaseModel):
     question: str
@@ -149,10 +156,10 @@ async def generate_mcq(
 
     Request Body:
     - **notes** (`str | None`)
-    Raw notes to generate questions from. Required if `deck_id` is not provided.
+    Raw notes to generate questions from.
 
-    - **deck_id** (`int | None`)
-    ID of the deck whose cards will be used as input. Required if `notes` is not provided.
+    - **deck_id** (`int`)
+    ID of the deck whose cards will be used as input.
 
     - **num_questions** (`int`, default=5)
     Number of questions to generate.
@@ -160,28 +167,31 @@ async def generate_mcq(
     - **difficulty** (`"easy" | "medium" | "hard"`, default="medium")
     Difficulty level of the generated questions.
     """
+
     notes = mcq_request.notes
     deck_id = mcq_request.deck_id
     num_questions = mcq_request.num_questions
     difficulty = mcq_request.difficulty
     
-    if notes is None:
-        raise HTTPException(status_code=400, detail="Provide notes to generate questions from")
-
-    if notes and not notes.strip():
-        raise HTTPException(status_code=400, detail="Provide non-empty notes")
+    deck = await current_user.decks.filter(id=deck_id).first()
+    if not deck:
+        raise HTTPException(status_code=404, detail="Deck not found")
     
-    try:
-        deck = await current_user.decks.filter(id=deck_id).first()
-        if not deck:
-            raise HTTPException(status_code=404, detail="Deck not found")
-
-    except Exception as e:
-        raise HTTPException(status_code=404, detail=f"Deck not found (error: {str(e)})") from None
+    if notes is not None:
+        source_notes = notes
+    else:
+        deck_cards = await deck.cards.filter(is_ai_generated=False).all()
+        if not deck_cards:
+            raise HTTPException(status_code=400, detail="Deck has no cards to use as source material")
+        
+        source_notes = "\n\n".join(
+            f"Q: {card.question}\nA: {card.answer}"
+            for card in deck_cards
+        )
 
     try:
         response = await gemini_wrapper.generate_mcq_questions(
-            notes=notes,
+            notes=source_notes,
             num_questions=num_questions,
             difficulty=difficulty,
         )
@@ -190,31 +200,20 @@ async def generate_mcq(
     
     valid_questions: list[MCQQuestion] = []
     for q in response:
-        if not q.question.strip():
-            continue
-        
-        if len(q.options) != 4:
-            continue
-        
-        for option in q.options:
-            if not option.strip():
-                continue
-            
-        if q.correct_answer.lower() not in ["a", "b", "c", "d"]:
-            continue
-            
-        if not q.explanation.strip():
-            continue
+        question = q.question.strip()
+        options = [q.option_a.strip(), q.option_b.strip(), q.option_c.strip(), q.option_d.strip()]
+        correct_answer = q.correct_answer.strip().upper()
+        explanation = q.explanation.strip() if q.explanation else None
         
         valid_questions.append(
             MCQQuestion(
-                question=q.question,
-                option_a=q.options[0],
-                option_b=q.options[1],
-                option_c=q.options[2],
-                option_d=q.options[3],
-                correct_answer=q.correct_answer,
-                explanation=q.explanation,
+                question=question,
+                option_a=options[0],
+                option_b=options[1],
+                option_c=options[2],
+                option_d=options[3],
+                correct_answer=correct_answer,
+                explanation=explanation,
                 difficulty=difficulty,
                 deck=deck,
             )
