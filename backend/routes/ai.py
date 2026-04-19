@@ -167,7 +167,6 @@ async def generate_mcq(
     - **difficulty** (`"easy" | "medium" | "hard"`, default="medium")
     Difficulty level of the generated questions.
     """
-
     notes = mcq_request.notes
     deck_id = mcq_request.deck_id
     num_questions = mcq_request.num_questions
