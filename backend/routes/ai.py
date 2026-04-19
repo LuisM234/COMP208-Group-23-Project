@@ -35,16 +35,13 @@ class MCQRequest(BaseModel):
 
     @model_validator(mode="after")
     def validate_source(self) -> "MCQRequest":
-        """Ensures that either notes or deck_id is provided, but not both."""
-        has_notes = self.notes is not None
-        has_deck = self.deck_id is not None
+        """Ensures that notes is provided."""
+        if self.notes is not None and not self.notes.strip():
+            raise ValueError("Provide non-empty notes")
 
-        if has_notes and has_deck:
-            raise ValueError("Provide either notes or deck_id, not both")
-        if not has_notes and not has_deck:
-            raise ValueError("Provide either notes or deck_id")
         return self
-    
+
+
 class GenerateCardsRequest(BaseModel):
     # we make the body model for generate-cards endpoint
 
@@ -137,7 +134,7 @@ async def generate_mcq(
     mcq_request: MCQRequest, 
     current_user: User = Depends(get_current_user),
     gemini_wrapper: GeminiWrapper = Depends(get_gemini_wrapper)
-) -> ORJSONResponse:
+) -> list[MCQQuestion]:
     """Generate exam-style multiple choice questions using Gemini.
 
     Request Body:
@@ -158,33 +155,23 @@ async def generate_mcq(
     num_questions = mcq_request.num_questions
     difficulty = mcq_request.difficulty
     
-    # should be covered by validator
-    if notes and deck_id:
-        raise HTTPException(status_code=400, detail="Provide either notes or deck_id, not both")
-    elif not notes and not deck_id:
-        raise HTTPException(status_code=400, detail="Provide either notes or deck_id")
-    
+    if notes is None:
+        raise HTTPException(status_code=400, detail="Provide notes to generate questions from")
+
     if notes and not notes.strip():
         raise HTTPException(status_code=400, detail="Provide non-empty notes")
     
-    if deck_id:
-        try:
-            deck = await current_user.decks.filter(id=deck_id).first()
-            if not deck:
-                raise HTTPException(status_code=404, detail="Deck not found")
+    try:
+        deck = await current_user.decks.filter(id=deck_id).first()
+        if not deck:
+            raise HTTPException(status_code=404, detail="Deck not found")
 
-        except Exception as e:
-            raise HTTPException(status_code=404, detail=f"Deck not found (error: {str(e)})") from None
-    
-    final_notes: str
-    if notes:
-        final_notes = notes
-    else:
-        final_notes = "\n".join(f"Q: {card.question}\nA: {card.answer}" for card in deck.cards)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"Deck not found (error: {str(e)})") from None
 
     try:
         response = await gemini_wrapper.generate_mcq_questions(
-            notes=final_notes,
+            notes=notes,
             num_questions=num_questions,
             difficulty=difficulty,
         )
@@ -212,7 +199,24 @@ async def generate_mcq(
     if not valid_questions:
         raise HTTPException(status_code=502, detail="Gemini did not return any valid questions")
     
-    # pretend i created something
+    questions = [
+        MCQQuestion(
+            question=q.question.strip(),
+            option_a=q.options[0].strip(),
+            option_b=q.options[1].strip(),
+            option_c=q.options[2].strip(),
+            option_d=q.options[3].strip(),
+            correct_answer=q.correct_answer.strip(),
+            explanation=q.explanation.strip(),
+            difficulty=difficulty,
+            deck=deck,
+        )
+        for q in valid_questions
+    ]
+    
+    await MCQQuestion.bulk_create(questions)
+    
+    return questions
     
 
 # defines a POST endpoint at /generate-cards
