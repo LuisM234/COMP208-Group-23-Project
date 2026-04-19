@@ -701,6 +701,14 @@
 
         let allDecks = [];
 
+        // ── Recent Deck Tracking ──
+        function recordRecentDeck(id) {
+            let recent = JSON.parse(localStorage.getItem('recentDecks') || '[]');
+            recent = [id, ...recent.filter(r => r !== id)];
+            recent = recent.slice(0, 3);
+            localStorage.setItem('recentDecks', JSON.stringify(recent));
+        }
+
         // ── Render deck grid ──
         function renderDecks(decks) {
             const grid = document.getElementById('deck-grid');
@@ -717,9 +725,9 @@
                     <div class="deck-card-desc">${deck.description || ''}</div>
                     <div class="deck-actions">
                         <a href="study_session.html?deck_id=${deck.id}" class="deck-btn"
-                            onclick="event.stopPropagation()">Study Now</a>
+                            onclick="event.stopPropagation(); recordRecentDeck(${deck.id})">Study Now</a>
                         <button class="deck-btn deck-btn-outline"
-                            onclick="event.stopPropagation(); window.location.href='study_session.html?deck_id=${deck.id}&mode=cram'">
+                            onclick="event.stopPropagation(); recordRecentDeck(${deck.id}); window.location.href='study_session.html?deck_id=${deck.id}&mode=cram'">
                             Cram Mode
                         </button>
                         <div class="deck-btn-icon" onclick="event.stopPropagation(); window.location.href='deck.html?deck_id=${deck.id}'" title="Manage deck">
