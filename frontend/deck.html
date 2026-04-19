@@ -526,6 +526,38 @@
                 grid-template-columns: 1fr !important;
             }
         }
+
+        .avatar-wrapper { position: relative; }
+        .avatar-dropdown {
+            display: none;
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            min-width: 160px;
+            z-index: 999;
+            overflow: hidden;
+        }
+        .avatar-dropdown.open { display: block; }
+        .avatar-dropdown a, .avatar-dropdown button {
+            display: flex; align-items: center; gap: 10px;
+            width: 100%; padding: 12px 16px;
+            font-size: 0.88em; font-weight: 500; color: #111;
+            text-decoration: none; background: none; border: none;
+            cursor: pointer; font-family: inherit; text-align: left;
+            transition: background 0.12s;
+        }
+        .avatar-dropdown a:hover, .avatar-dropdown button:hover { background: #f5f5f5; }
+        .avatar-dropdown button.danger { color: #dc3545; }
+        .avatar-dropdown button.danger:hover { background: #fff5f5; }
+        .avatar-dropdown svg {
+            width: 15px; height: 15px; stroke: currentColor; fill: none;
+            stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0;
+        }
+        .dropdown-divider { height: 1px; background: #f0f0f0; margin: 4px 0; }
     </style>
 </head>
 <body>
@@ -539,7 +571,20 @@
             <a href="#" class="top-link">Community</a>
             <a href="progress.html" class="top-link">Progress</a>
         </div>
-        <div class="nav-avatar" id="user-initials">JD</div>
+        <div class="avatar-wrapper" id="avatar-wrapper">
+            <div class="nav-avatar" id="user-initials" onclick="document.getElementById('avatar-dropdown').classList.toggle('open');event.stopPropagation();">JD</div>
+            <div class="avatar-dropdown" id="avatar-dropdown" onclick="event.stopPropagation();">
+                <a href="#">
+                    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    Account
+                </a>
+                <div class="dropdown-divider"></div>
+                <button class="danger" onclick="localStorage.removeItem('token');localStorage.removeItem('userInitials');window.location.href='index.html';">
+                    <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Log out
+                </button>
+            </div>
+        </div>
     </nav>
 
     <!-- Main -->
@@ -1069,6 +1114,12 @@
         // ── Init ──
         loadDeck();
         loadCards();
+
+                document.addEventListener('click', () => {
+            const dd = document.getElementById('avatar-dropdown');
+            if (dd) dd.classList.remove('open');
+        });
+
     </script>
 </body>
 </html>
