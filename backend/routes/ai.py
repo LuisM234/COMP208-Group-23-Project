@@ -40,6 +40,16 @@ class MCQRequest(BaseModel):
             raise ValueError("Provide non-empty notes")
 
         return self
+    
+class MCQQuestionResponse(BaseModel):
+    question: str
+    option_a: str
+    option_b: str
+    option_c: str
+    option_d: str
+    correct_answer: str
+    explanation: str
+    difficulty: str
 
 
 class GenerateCardsRequest(BaseModel):
@@ -134,7 +144,7 @@ async def generate_mcq(
     mcq_request: MCQRequest, 
     current_user: User = Depends(get_current_user),
     gemini_wrapper: GeminiWrapper = Depends(get_gemini_wrapper)
-) -> list[MCQQuestion]:
+) -> list[MCQQuestionResponse]:
     """Generate exam-style multiple choice questions using Gemini.
 
     Request Body:
@@ -214,7 +224,20 @@ async def generate_mcq(
         raise HTTPException(status_code=502, detail="Gemini did not return any valid questions")
     
     await MCQQuestion.bulk_create(valid_questions)
-    return valid_questions
+
+    return [
+        MCQQuestionResponse(
+            question=q.question,
+            option_a=q.option_a,
+            option_b=q.option_b,
+            option_c=q.option_c,
+            option_d=q.option_d,
+            correct_answer=q.correct_answer,
+            explanation=q.explanation,
+            difficulty=q.difficulty,
+        )
+        for q in valid_questions
+    ]
     
 
 # defines a POST endpoint at /generate-cards
