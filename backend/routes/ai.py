@@ -279,7 +279,7 @@ async def generate_cards(
             generation_run_id=generation_run.id,
         )
         created_cards.append(card)
-        return created_cards
+    return created_cards
 
 
     
