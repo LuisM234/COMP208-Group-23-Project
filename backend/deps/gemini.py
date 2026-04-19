@@ -77,18 +77,6 @@ class GeminiWrapper:
         list[Flashcard]
             A list of generated flashcards. Each flashcard contains a question and an answer.
         """
-        from deps.database import AIGenerationRun
-
-
-        run = await AIGenerationRun.create(
-            kind="flashcards",
-            input_type="notes",
-            requested_count=num_cards,
-            mode_name=self.model,
-            status="pending",
-            user_id=user_id,
-            deck_id=deck_id,
-        )
 
 
         config = types.GenerateContentConfig(

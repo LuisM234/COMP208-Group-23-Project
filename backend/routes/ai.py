@@ -281,19 +281,7 @@ async def generate_cards(
             generation_run_id=generation_run.id,
         )
         created_cards.append(card)
-
-    # # will contain a list of card objects
-    # unique id for card, question, answer, deck_id, and is_ai_generated boolean 
-    return [
-        (
-            card.id,
-            card.question,
-            card.answer,
-            card.deck_id,
-            card.is_ai_generated,
-        )
-        for card in created_cards
-    ]
+        return created_cards
 
 
     
