@@ -185,7 +185,7 @@ class GeminiWrapper:
         config = types.GenerateContentConfig(
             system_instruction=(
                 f"You generate exam-style multiple choice questions from notes. "
-                f"Return exactly {num_questions} items. "
+                f"Return exactly {num_questions} items. Correct answer should be one of the lettered options. "
                 f"Difficulty level: {difficulty}."
             ),
             temperature=0.3,
