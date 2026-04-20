@@ -190,7 +190,7 @@ async def generate_mcq(
         
     generation_run = AIGenerationRun(
         kind="mcq",
-        input_type="notes" if notes else "deck",
+        input_type="notes" if notes is not None else "deck",
         requested_count=num_questions,
         difficulty=difficulty,
         user=current_user,
@@ -218,26 +218,15 @@ async def generate_mcq(
             status_code=502,
             detail=f"Gemini API error: {response.error_message or 'Unknown error'}",
         )
-        
-    generation_run.update_from_dict(
-        {
-            "model_name": response.model_name,
-            "status": "success",
-            "error_code": None,
-            "error_message": None,
-            "raw_response": response.raw_response,
-        }
-    )
-    await generation_run.save()
     
-    valid_questions: list[MCQQuestion] = []
+    questions: list[MCQQuestion] = []
     for q in generated:
         question = q.question.strip()
         options = [q.option_a.strip(), q.option_b.strip(), q.option_c.strip(), q.option_d.strip()]
         correct_answer = q.correct_answer.strip().upper()
         explanation = q.explanation.strip() if q.explanation else None
         
-        valid_questions.append(
+        questions.append(
             MCQQuestion(
                 question=question,
                 option_a=options[0],
@@ -252,19 +241,32 @@ async def generate_mcq(
             )
         )
         
-    if not valid_questions:
+    if not questions:
         generation_run.update_from_dict(
             {
                 "model_name": response.model_name,
-                "status": "error",
-                "error_code": "failed",
+                "status": "failed",
+                "error_code": None,
                 "error_message": "Gemini did not return any valid questions",
                 "raw_response": response.raw_response,
             }
         )
+        await generation_run.save()
         raise HTTPException(status_code=502, detail="Gemini did not return any valid questions")
+    
+    generation_run.update_from_dict(
+        {
+            "created_count": len(questions),
+            "model_name": response.model_name,
+            "status": "success",
+            "error_code": None,
+            "error_message": None,
+            "raw_response": response.raw_response,
+        }
+    )
+    await generation_run.save()
 
-    await MCQQuestion.bulk_create(valid_questions)
+    await MCQQuestion.bulk_create(questions)
 
     return [
         MCQQuestionResponse(
@@ -277,7 +279,7 @@ async def generate_mcq(
             explanation=q.explanation,
             difficulty=q.difficulty,
         )
-        for q in valid_questions
+        for q in questions
     ]
 
 
