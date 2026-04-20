@@ -81,66 +81,21 @@ class GenerateCardsRequest(BaseModel):
         description="number of flashcards to generate",
     )
 
-    @model_validator(mode="after")
-    def validate_source(self) -> "GenerateCardsRequest":
-        # makes sure notes and deck_id are both provided or both not provided
-        if self.notes is None or not self.notes.strip():
-            raise ValueError("provide non-empty notes")
-        return self
+    @field_validator("notes")
+    @classmethod
+    def validate_notes(cls, value: str | None) -> str | None:
+        """Ensures that if notes is provided, it is not just whitespace."""
+        if value is None:
+            return None
+
+        value = value.strip()
+        if not value:
+            raise ValueError("Provide non-empty notes")
+
+        return value
 
     
 
-    # this would parse the json array of a question and answer from the gemini output.
-    def parse_flashcards_json(raw_text: str, max_cards: int) -> list[dict[str, str]]:
-        """Parse Gemini response JSON to extract flashcards.
-
-        Parameters
-        ----------
-        raw_text : str
-            The raw JSON string returned by Gemini.
-        max_cards : int
-            The maximum number of flashcards to return.
-
-        Returns
-        -------
-        list[dict[str, str]]
-            A list of flashcards, each represented as a dictionary with 'question' and 'answer' keys.
-        """
-
-        parsed: Any
-        try:
-            parsed = orjson.loads(raw_text)
-        except orjson.JSONDecodeError:
-            raise ValueError("Gemini response is not valid JSON") from None
-
-        # gemini didn't return a json array, raise an error
-        if not isinstance(parsed, list):
-            raise ValueError("Gemini didn't return a JSON array")
-
-        # creates empty list, to store final flashcards, check if in a dictionary, if its not in dictionary skip to next one
-        # then attempts tp pull value for question and answer key
-        # double checks if are string, if aren't strings, go to next one, also clear whitespaces
-        # if blank gets skipped,
-        # final cleaned card, gets added to cards list, then would return it
-        cards: list[dict[str, str]] = []
-        for item in parsed:
-            if not isinstance(item, dict):
-                continue
-
-            question = item.get("question")
-            answer = item.get("answer")
-            if not isinstance(question, str) or not isinstance(answer, str):
-                continue
-
-            question = question.strip()
-            answer = answer.strip()
-            if not question or not answer:
-                continue
-            cards.append({"question": question, "answer": answer})
-
-        if not cards:
-            raise ValueError("No valid flashcards found in Gemini response")
-        return cards[:max_cards]
 
 
 ai_route = APIRouter(prefix="/ai", tags=["AI"])
@@ -283,21 +238,7 @@ async def generate_mcq(
     ]
 
 
- 
-    
-class CardResponesRequest(BaseModel):
-    """Body model for the /generate-mcq endpoint."""
-    
-    deck_id: int = Field(
-        ge=1,  # greater than or equal to
-        description="ID of the deck to use.",
-    )
 
-    notes: str | None = Field(
-        default=None, 
-        min_length=1, 
-        description="Raw notes to generate questions from. If not provided, the deck's cards are used."
-    )
 
 
 
