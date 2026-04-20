@@ -164,6 +164,7 @@ async def generate_mcq(
                 "status": response.status,
                 "error_code": response.error_code,
                 "error_message": response.error_message,
+                "raw_response": response.raw_response,
             }
         )
         await generation_run.save()
@@ -172,6 +173,17 @@ async def generate_mcq(
             status_code=502,
             detail=f"Gemini API error: {response.error_message or 'Unknown error'}",
         )
+        
+    generation_run.update_from_dict(
+        {
+            "model_name": response.model_name,
+            "status": "success",
+            "error_code": None,
+            "error_message": None,
+            "raw_response": response.raw_response,
+        }
+    )
+    await generation_run.save()
     
     valid_questions: list[MCQQuestion] = []
     for q in generated:
@@ -191,22 +203,23 @@ async def generate_mcq(
                 explanation=explanation,
                 difficulty=difficulty,
                 deck=deck,
+                generation_run=generation_run,
             )
         )
         
     if not valid_questions:
+        generation_run.update_from_dict(
+            {
+                "model_name": response.model_name,
+                "status": "error",
+                "error_code": "failed",
+                "error_message": "Gemini did not return any valid questions",
+                "raw_response": response.raw_response,
+            }
+        )
         raise HTTPException(status_code=502, detail="Gemini did not return any valid questions")
-    
+
     await MCQQuestion.bulk_create(valid_questions)
-    generation_run.update_from_dict(
-        {
-            "model_name": response.model_name,
-            "status": "success",
-            "error_code": None,
-            "error_message": None,
-        }
-    )
-    await generation_run.save()
 
     return [
         MCQQuestionResponse(
