@@ -72,6 +72,107 @@ class GeminiWrapper:
     async def generate_flashcards(
         self, notes: str, num_cards: int
     ) -> tuple[list[Flashcard] | None, GeminiResponse]:
+        # config what gemini should do, generate flashcards, how many, and return as json matching schema
+        config = types.GenerateContentConfig(
+            system_instruction=f"You generate study flashcards from notes. Return exactly {num_cards} items.",
+            temperature=0.3,
+            response_mime_type="application/json",
+            response_schema=list[Flashcard],
+        )
+        # set up http options, including api version and any aiohttp settings
+        http_options = types.HttpOptions(
+            api_version=self.api_version,
+            async_client_args={},
+        )   
+        # make the async call to Gemini API, handle any errors, and parse the response
+        try:
+            async with genai.Client(
+                api_key=self.api_key,
+                http_options=http_options,
+            ).aio as aclient:
+                # make the API call to generate content with the given notes and config
+                response = await aclient.models.generate_content(
+                    model=self.model,
+                    contents=notes,
+                    config=config,
+                )
+        # handle API errors separately to capture status codes, then catch-all for any other exceptions
+        except errors.APIError as exc:
+            # if it's a rate limit error, we can set a specific status, otherwise it's a general failure
+            status_name = (
+                "rate_limited"
+                if exc.code == status.HTTP_429_TOO_MANY_REQUESTS
+                else "failed"
+            )
+            # returns none for data and a gemini response with error details
+            return None, GeminiResponse(
+                model_name=self.model,
+                status=status_name,
+                error_code=exc.code,
+                error_message=exc.message,
+                raw_response=str(exc.response),
+            )
+        # catches any other unexpected errors like network timeouts
+        except Exception as exc:
+            return None, GeminiResponse(
+                model_name=self.model,
+                status="failed",
+                error_code=None,
+                error_message="Unknown error occurred while contacting Gemini",
+                raw_response=str(exc),
+            )
+        #gets raw text from gemini's repsonse
+        raw_text = response.text
+        # checks if gemini returned nothing or just whitespace
+        if not raw_text or not raw_text.strip():
+            return None, GeminiResponse(
+                model_name=self.model,
+                status="failed",
+                error_code=None,
+                error_message="Empty response from Gemini",
+                raw_response=raw_text,
+            )
+        # attempts to parse the response as json according to the schema we defined in the config
+        parsed = response.parsed
+        #  if failed completely, return an error response indicating invalid json
+        if not parsed:
+            return None, GeminiResponse(
+                model_name=self.model,
+                status="invalid_json",
+                error_code=None,
+                error_message="Gemini response is not valid JSON",
+                raw_response=raw_text,
+            )
+        #validates eahc item in the parsed response against our Flashcard model, if any item fails validation, return an error response with details
+        try:
+            validated = [Flashcard.model_validate(item) for item in cast(list[object], parsed)]
+        except ValidationError as exc:
+            return None, GeminiResponse(
+                model_name=self.model,
+                status="invalid_json",
+                error_code=None,
+                error_message=f"Schema validation failed: {exc}",
+                raw_response=raw_text,
+            )   
+        
+        # if gemini returned the exact number of cards we asked for
+        if len(validated) != num_cards:
+            return None, GeminiResponse(
+                model_name=self.model,
+                status="invalid_json",
+                error_code=None,
+                error_message=f"Expected {num_cards} flashcards, got {len(validated)}",
+                raw_response=raw_text,
+            )
+        #if everything is validated and correct, return the flashcards, with no error messages and success reply
+        return validated, GeminiResponse(
+            model_name=self.model,
+            status="success",
+            error_code=None,
+            error_message=None,
+            raw_response=raw_text,
+        )
+    
         """Generates flashcards from notes using Gemini API.
         
         Parameters
@@ -88,79 +189,6 @@ class GeminiWrapper:
         """
 
 
-        config = types.GenerateContentConfig(
-            system_instruction=f"You generate study flashcards from notes. Return exactly {num_cards} items.",
-            temperature=0.3,
-            response_mime_type="application/json",
-            response_schema=list[Flashcard],
-        )
-        # makes a config object for model, and chooses a temp ( randomness level) make it more deterministic and focused for flashcards
-        # explicitly tells gemini to return the data in valid JSON format
-        # configures network settings
-        # specifies which api version to use
-        # also stores empty dictionary for extra arguments like custom headers or timeouts
-
-        http_options = types.HttpOptions(
-            api_version=self.api_version,
-            async_client_args={},
-        )
-        # starts a block for catching netowrk or api errors
-        # then intialises the client and creates a session and closes when block finishes
-        # the await aclient.model is used for network call, tells python to run other task while waiting fro gemini to finish generating the flashcards
-        try:
-            async with genai.Client(
-                api_key=self.api_key,
-                http_options=http_options,
-            ).aio as aclient:
-                response = await aclient.models.generate_content(
-                    model=self.model,
-                    contents=notes,
-                    config=config,
-                )
-        # catches errors by googles servers
-        # extracts the http code from error object
-        # 429 for checking if you have exceeded your rate limit, if hit raises and error for end user to see
-        # from none is used to cleanup the traceback of previosu internal errors
-        # then a standard exception for catching all other unexpected issues, so app doesn't crash silently
-        except errors.APIError as exc:
-            code = exc.code
-            if code == status.HTTP_429_TOO_MANY_REQUESTS:
-                raise HTTPException(
-                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                    detail="Gemini rate limit exceeded",
-                ) from None
-
-            raise HTTPException(
-                status_code=status.HTTP_502_BAD_GATEWAY,
-                detail=f"Gemini error ({code})",
-            ) from None
-
-        except Exception:
-            raise HTTPException(
-                status_code=status.HTTP_502_BAD_GATEWAY,
-                detail="Failed to contact Gemini",
-            ) from None
-
-        # tries to get text from response, returns none if doesn't exist
-        # checks if text is missing, not a string or contains only whitespaces
-        # check the nested structure ( candidates -> f candidate -> f part -> text)
-        # if manual fails the response fails, the response is invalid or unexpected
-        # the none gets rid of the traceback of caught exception
-        model_text = response.text
-        if not model_text or not model_text.strip():
-            raise HTTPException(
-                status_code=status.HTTP_502_BAD_GATEWAY,
-                detail="Not expected response from Gemini",
-            )
-
-        if not response.parsed:
-            raise HTTPException(
-                status_code=status.HTTP_502_BAD_GATEWAY,
-                detail="Gemini response is not valid JSON",
-            )
-
-        parsed_cards = cast(list[Flashcard], response.parsed)
-        return parsed_cards
     
     async def generate_mcq_questions(
         self,
@@ -270,6 +298,8 @@ class GeminiWrapper:
                 error_message=f"Expected {num_questions} questions, got {len(validated)}",
                 raw_response=raw_text,
             )
+        
+        
 
         return validated, GeminiResponse(
             model_name=self.model,
