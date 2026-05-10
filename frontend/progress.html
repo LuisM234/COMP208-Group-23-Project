@@ -789,7 +789,7 @@
         <section class="page-intro">
             <div>
                 <h1 class="page-title">Progress</h1>
-                <p class="page-copy">Track how your revision is moving over time, spot your strongest decks, and see when your study rhythm is at its best. This first pass uses seeded demo data so we can shape the page before wiring real analytics in.</p>
+                <p class="page-copy">Track how your revision is moving over time, spot your largest decks, and see when your study rhythm is at its best.</p>
             </div>
             <div class="period-switch" aria-label="Period selector">
                 <button class="period-chip" type="button" data-period="7d">7 days</button>
@@ -862,8 +862,8 @@
 
         <section class="insights-grid">
             <article class="insight-card">
-                <h3 class="insight-title">Strongest decks</h3>
-                <p class="insight-copy">These are the decks where your revision looks healthiest right now, based on completion progress and how often you keep them in rotation.</p>
+                <h3 class="insight-title">Your decks</h3>
+                <p class="insight-copy">A quick view of the decks in your library, sized by how many cards each one holds.</p>
                 <div class="deck-list" id="deck-performance-list"></div>
             </article>
 
@@ -885,176 +885,181 @@
     </main>
 
     <script>
+        // Match the API_BASE pattern used by dashboard.html / my_decks.html
+        const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:8000'
+            : 'https://comp208-group-23-project-production.up.railway.app';
+
         const initials = localStorage.getItem('userInitials') || 'JD';
         document.getElementById('user-initials').innerText = initials;
 
-        function buildDailySeries(endDate, reviewedSeries, correctSeries) {
-            return reviewedSeries.map((cards_reviewed, index) => {
-                const pointDate = new Date(endDate);
-                pointDate.setDate(pointDate.getDate() - (reviewedSeries.length - 1 - index));
-
-                return {
-                    date: pointDate.toISOString().slice(0, 10),
-                    cards_reviewed,
-                    cards_correct: correctSeries[index]
-                };
-            });
+        function authHeaders() {
+            const token = localStorage.getItem('token');
+            return {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            };
         }
 
-        function generateTrendSeries(days, start, trend, wave) {
-            return Array.from({ length: days }, (_, index) => {
-                const seasonal = Math.sin(index / 3.8) * wave;
-                const pulse = ((index % 7) - 3) * 1.15;
-                return Math.max(6, Math.round(start + (trend * index) + seasonal + pulse));
-            });
-        }
-
-        function deriveCorrectSeries(reviewedSeries, ratio) {
-            return reviewedSeries.map((value, index) => {
-                const wobble = ((index % 5) - 2) * 0.012;
-                return Math.max(0, Math.round(value * Math.min(0.95, Math.max(0.68, ratio + wobble))));
-            });
-        }
-
-        const analyticsByPeriod = {
-            '7d': {
-                daily: buildDailySeries(
-                    '2026-04-18',
-                    [12, 17, 15, 21, 18, 26, 24],
-                    [10, 14, 13, 17, 15, 22, 20]
-                ),
-                totals: {
-                    total_cards_reviewed: 133,
-                    current_streak_days: 6
-                },
-                overview: {
-                    study_sessions: 5,
-                    decks_studied: 3,
-                    reviewedSub: 'Across the last 7 days',
-                    sessionsSub: 'Days you revised this week',
-                    decksSub: 'Decks you opened this week',
-                    chartCopy: 'A closer look at the last week so you can see the day-to-day pace of your revision.'
-                }
-            },
-            '30d': {
-                daily: buildDailySeries(
-                    '2026-04-18',
-                    [8, 12, 10, 13, 16, 18, 14, 15, 17, 19, 21, 23, 20, 24, 26, 25, 29, 31, 28, 32, 34, 33, 37, 39, 36, 41, 44, 42, 46, 48],
-                    [6, 10, 8, 11, 13, 15, 12, 13, 14, 16, 18, 20, 17, 21, 22, 21, 25, 27, 24, 27, 29, 28, 31, 34, 31, 35, 38, 36, 39, 42]
-                ),
-                totals: {
-                    total_cards_reviewed: 801,
-                    current_streak_days: 6
-                },
-                overview: {
-                    study_sessions: 18,
-                    decks_studied: 4,
-                    reviewedSub: 'Across the last 30 days',
-                    sessionsSub: 'Active revision days this month',
-                    decksSub: 'Decks you touched this month',
-                    chartCopy: 'A 30-day view of your revision activity, grouped into weekly checkpoints so it is easy to scan at a glance.'
-                }
-            },
-            '90d': {
-                daily: buildDailySeries(
-                    '2026-04-18',
-                    generateTrendSeries(90, 9, 0.14, 4.8),
-                    deriveCorrectSeries(generateTrendSeries(90, 9, 0.14, 4.8), 0.82)
-                ),
-                totals: {
-                    total_cards_reviewed: 0,
-                    current_streak_days: 6
-                },
-                overview: {
-                    study_sessions: 54,
-                    decks_studied: 6,
-                    reviewedSub: 'Across the last 90 days',
-                    sessionsSub: 'Active revision days this quarter',
-                    decksSub: 'Decks you revisited this quarter',
-                    chartCopy: 'A wider quarterly trend so you can see whether your study pace has stayed consistent over the term.'
-                }
-            },
-            'all': {
-                daily: buildDailySeries(
-                    '2026-04-18',
-                    generateTrendSeries(180, 7, 0.09, 4.2),
-                    deriveCorrectSeries(generateTrendSeries(180, 7, 0.09, 4.2), 0.81)
-                ),
-                totals: {
-                    total_cards_reviewed: 0,
-                    current_streak_days: 6
-                },
-                overview: {
-                    study_sessions: 109,
-                    decks_studied: 8,
-                    reviewedSub: 'Across your full study history',
-                    sessionsSub: 'Tracked revision days overall',
-                    decksSub: 'Decks you have studied overall',
-                    chartCopy: 'An all-time view that smooths your revision into broader checkpoints so the longer trend is easy to read.'
-                }
+        function requireAuth() {
+            if (!localStorage.getItem('token')) {
+                window.location.href = 'index.html';
+                return false;
             }
+            return true;
+        }
+
+        // ----- Config -----
+
+        const WEEKDAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+        const PERIOD_CONFIG = {
+            '7d':  { days: 7,   reviewedSub: 'Across the last 7 days',  sessionsSub: 'Days you revised this week',       decksSub: 'In your library',  chartCopy: 'A closer look at the last week so you can see the day-to-day pace of your revision.' },
+            '30d': { days: 30,  reviewedSub: 'Across the last 30 days', sessionsSub: 'Active revision days this month',  decksSub: 'In your library',  chartCopy: 'A 30-day view of your revision activity, grouped into weekly checkpoints so it is easy to scan at a glance.' },
+            '90d': { days: 90,  reviewedSub: 'Across the last 90 days', sessionsSub: 'Active revision days this quarter', decksSub: 'In your library', chartCopy: 'A wider quarterly trend so you can see whether your study pace has stayed consistent over the term.' },
+            'all': { days: 365, reviewedSub: 'Across the last year',    sessionsSub: 'Tracked revision days overall',    decksSub: 'In your library',  chartCopy: 'A long-range view that smooths your revision into broader checkpoints so the longer trend is easy to read.' }
         };
 
-        Object.values(analyticsByPeriod).forEach(periodData => {
-            periodData.totals.total_cards_reviewed = periodData.daily.reduce(
-                (sum, item) => sum + item.cards_reviewed,
-                0
-            );
-        });
+        // Per-period cache so switching tabs is instant after first fetch
+        const cache = {
+            totals: null,
+            daily: {},
+            decks: null
+        };
 
-        const strongestDecks = [
-            { name: 'Biology - Cell Structure', progress: 82, cards: 87, note: '14 due next' },
-            { name: 'Spanish Vocabulary', progress: 68, cards: 150, note: '22 due next' },
-            { name: 'History - World War II', progress: 74, cards: 64, note: '9 due next' }
-        ];
+        // ----- API -----
 
-        const studyRhythm = [
-            { label: 'Mon', value: 38 },
-            { label: 'Tue', value: 82 },
-            { label: 'Wed', value: 56 },
-            { label: 'Thu', value: 88 },
-            { label: 'Fri', value: 44 },
-            { label: 'Sat', value: 61 },
-            { label: 'Sun', value: 35 }
-        ];
+        async function fetchTotals() {
+            if (cache.totals) return cache.totals;
+            const res = await fetch(`${API_BASE}/analytics/total`, { headers: authHeaders() });
+            if (res.status === 401) { window.location.href = 'index.html'; return null; }
+            if (!res.ok) throw new Error(`Failed to load totals (${res.status})`);
+            cache.totals = await res.json();
+            return cache.totals;
+        }
+
+        async function fetchDaily(periodKey) {
+            if (cache.daily[periodKey]) return cache.daily[periodKey];
+            const days = PERIOD_CONFIG[periodKey].days;
+            const res = await fetch(`${API_BASE}/analytics/daily?days=${days}`, { headers: authHeaders() });
+            if (res.status === 401) { window.location.href = 'index.html'; return null; }
+            if (!res.ok) throw new Error(`Failed to load daily analytics (${res.status})`);
+            cache.daily[periodKey] = await res.json();
+            return cache.daily[periodKey];
+        }
+
+        async function fetchDecks() {
+            if (cache.decks) return cache.decks;
+            const res = await fetch(`${API_BASE}/decks/`, { headers: authHeaders() });
+            if (res.status === 401) { window.location.href = 'index.html'; return null; }
+            if (!res.ok) return [];
+            const decks = await res.json();
+            // Fetch card counts in parallel, same approach as dashboard.html
+            cache.decks = await Promise.all(decks.map(async (deck) => {
+                try {
+                    const cr = await fetch(`${API_BASE}/decks/${deck.id}/cards`, { headers: authHeaders() });
+                    const cards = cr.ok ? await cr.json() : [];
+                    return { ...deck, cards_count: cards.length };
+                } catch {
+                    return { ...deck, cards_count: 0 };
+                }
+            }));
+            return cache.decks;
+        }
+
+        // ----- Derived metrics from daily data -----
+
+        function totalReviewedInPeriod(daily) {
+            return daily.reduce((sum, d) => sum + d.cards_reviewed, 0);
+        }
+
+        // A "session" = a day with at least one reviewed card
+        function studySessionsInPeriod(daily) {
+            return daily.filter(d => d.cards_reviewed > 0).length;
+        }
+
+        // Aggregate reviewed cards by weekday across the period
+        function studyRhythmFromDaily(daily) {
+            const totals = [0, 0, 0, 0, 0, 0, 0];
+            daily.forEach(d => {
+                // Backend stores dates in UTC, parse as UTC so weekday is consistent
+                const date = new Date(d.date + 'T00:00:00Z');
+                // getUTCDay(): Sunday=0..Saturday=6, convert to Mon=0..Sun=6
+                const dayIndex = (date.getUTCDay() + 6) % 7;
+                totals[dayIndex] += d.cards_reviewed;
+            });
+            const max = Math.max(...totals, 1);
+            return totals.map((value, i) => ({
+                label: WEEKDAY_LABELS[i],
+                value: Math.round((value / max) * 100), // bar height 0-100
+                raw: value
+            }));
+        }
+
+        function describeRhythm(rhythm) {
+            const sorted = rhythm.map((d, i) => ({ ...d, i }))
+                .filter(d => d.raw > 0)
+                .sort((a, b) => b.raw - a.raw);
+            const activeDays = sorted.length;
+
+            if (activeDays === 0) {
+                return {
+                    headline: 'No activity yet',
+                    sub: 'Once you start reviewing, your most active study days will show up here.',
+                    badge: '0 active days'
+                };
+            }
+            if (activeDays === 1) {
+                return {
+                    headline: `Most active on ${WEEKDAY_LABELS[sorted[0].i]}`,
+                    sub: 'This is your strongest study day in the current window.',
+                    badge: `${sorted[0].raw} cards`
+                };
+            }
+            const a = WEEKDAY_LABELS[sorted[0].i];
+            const b = WEEKDAY_LABELS[sorted[1].i];
+            return {
+                headline: `Most active on ${a} and ${b}`,
+                sub: 'These are your strongest study windows in the current view.',
+                badge: `${activeDays} active day${activeDays === 1 ? '' : 's'}/week`
+            };
+        }
+
+        // ----- Chart helpers (unchanged behaviour) -----
 
         function formatShortDate(dateString, options) {
-            return new Date(dateString).toLocaleDateString('en-GB', options);
+            return new Date(dateString + 'T00:00:00Z').toLocaleDateString('en-GB', { ...options, timeZone: 'UTC' });
         }
 
         function bucketSeries(dailySeries, bucketCount, labelBuilder) {
             const bucketSize = Math.ceil(dailySeries.length / bucketCount);
             const points = [];
-
             for (let index = 0; index < bucketCount; index += 1) {
                 const slice = dailySeries.slice(index * bucketSize, (index + 1) * bucketSize);
                 if (!slice.length) continue;
-
                 points.push({
                     label: labelBuilder(slice, index),
                     value: slice.reduce((sum, item) => sum + item.cards_reviewed, 0)
                 });
             }
-
             return points;
         }
 
         function buildChartPoints(periodKey, dailySeries) {
+            if (!dailySeries.length) return [];
             if (periodKey === '7d') {
                 return dailySeries.map(item => ({
                     label: formatShortDate(item.date, { weekday: 'short' }),
                     value: item.cards_reviewed
                 }));
             }
-
             if (periodKey === '30d') {
                 return bucketSeries(dailySeries, 5, (_, index) => `Week ${index + 1}`);
             }
-
             if (periodKey === '90d') {
                 return bucketSeries(dailySeries, 6, (slice) => formatShortDate(slice[0].date, { month: 'short', day: 'numeric' }));
             }
-
             return bucketSeries(dailySeries, 6, (slice) => formatShortDate(slice[0].date, { month: 'short' }));
         }
 
@@ -1074,8 +1079,9 @@
             const leftPadding = 28;
             const rightPadding = 28;
             const usableWidth = width - leftPadding - rightPadding;
-            const maxValue = Math.max(...points.map(point => point.value));
-            const roundedMax = Math.ceil((maxValue + 8) / 20) * 20;
+            const maxValue = points.length ? Math.max(...points.map(point => point.value)) : 0;
+            // Floor of 20 so an empty/zero chart still has a sensible y-axis
+            const roundedMax = Math.max(20, Math.ceil((maxValue + 8) / 20) * 20);
 
             const coordinates = points.map((point, index) => {
                 const x = points.length === 1
@@ -1086,7 +1092,9 @@
             });
 
             const linePath = buildLinePath(coordinates);
-            const areaPath = `${linePath} L ${coordinates[coordinates.length - 1].x} ${baseY} L ${coordinates[0].x} ${baseY} Z`;
+            const areaPath = coordinates.length
+                ? `${linePath} L ${coordinates[coordinates.length - 1].x} ${baseY} L ${coordinates[0].x} ${baseY} Z`
+                : '';
 
             document.getElementById('line-path').setAttribute('d', linePath);
             document.getElementById('area-path').setAttribute('d', areaPath);
@@ -1118,79 +1126,137 @@
                 return `<div class="chart-pill" style="left:${(point.x / width) * 100}%; top:${(point.y / height) * 100}%; animation-delay:${0.06 + (index * 0.08)}s">${point.value} cards</div>`;
             }).join('');
 
-            xAxis.style.gridTemplateColumns = `repeat(${points.length}, minmax(0, 1fr))`;
+            xAxis.style.gridTemplateColumns = `repeat(${points.length || 1}, minmax(0, 1fr))`;
             xAxis.innerHTML = points.map(point => `<span>${point.label}</span>`).join('');
             yAxis.innerHTML = yTicks.map(value => `<span>${value}</span>`).join('');
         }
 
-        function renderDeckInsights() {
-            const list = document.getElementById('deck-performance-list');
-            list.innerHTML = strongestDecks.map(deck => `
-                <div class="deck-item">
-                    <div>
-                        <div class="deck-item-title">${deck.name}</div>
-                        <div class="deck-item-meta">${deck.cards} cards in rotation</div>
-                        <div class="mini-progress-row">
-                            <span>Completion</span>
-                            <span>${deck.progress}%</span>
-                        </div>
-                        <div class="mini-progress-bar">
-                            <div class="mini-progress-fill" style="width:${deck.progress}%"></div>
-                        </div>
-                    </div>
-                    <div class="deck-meta-pill">${deck.note}</div>
-                </div>
-            `).join('');
+        // ----- Renderers -----
+
+        function escapeHtml(str) {
+            return String(str ?? '').replace(/[&<>"']/g, ch => (
+                { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
+            ));
         }
 
-        function renderRhythm() {
+        function renderKpis({ streak, reviewed, sessions, decksCount, copy }) {
+            document.getElementById('kpi-streak').innerText = `${streak} day${streak === 1 ? '' : 's'}`;
+            document.getElementById('kpi-reviewed').innerText = reviewed;
+            document.getElementById('kpi-sessions').innerText = sessions;
+            document.getElementById('kpi-decks').innerText = decksCount;
+            document.getElementById('kpi-reviewed-sub').innerText = copy.reviewedSub;
+            document.getElementById('kpi-sessions-sub').innerText = copy.sessionsSub;
+            document.getElementById('kpi-decks-sub').innerText = copy.decksSub;
+            document.getElementById('chart-copy').innerText = copy.chartCopy;
+        }
+
+        function renderDecksInsight(decks) {
+            const list = document.getElementById('deck-performance-list');
+            if (!decks || decks.length === 0) {
+                list.innerHTML = `<p style="color: var(--text-secondary); font-size: 0.92em;">You have not created any decks yet. Once you do, they will appear here.</p>`;
+                return;
+            }
+            // Top 5 by card count, with a relative-size bar so the visual is honest
+            const top = [...decks].sort((a, b) => b.cards_count - a.cards_count).slice(0, 5);
+            const maxCards = Math.max(...top.map(d => d.cards_count), 1);
+            list.innerHTML = top.map(deck => {
+                const fillPct = Math.round((deck.cards_count / maxCards) * 100);
+                return `
+                    <div class="deck-item">
+                        <div>
+                            <div class="deck-item-title">${escapeHtml(deck.title)}</div>
+                            <div class="deck-item-meta">${deck.cards_count} card${deck.cards_count === 1 ? '' : 's'} in deck</div>
+                            <div class="mini-progress-row">
+                                <span>Relative size</span>
+                                <span>${deck.cards_count} / ${maxCards}</span>
+                            </div>
+                            <div class="mini-progress-bar">
+                                <div class="mini-progress-fill" style="width:${fillPct}%"></div>
+                            </div>
+                        </div>
+                        <div class="deck-meta-pill">${deck.cards_count} cards</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderRhythm(rhythm) {
             const rhythmBars = document.getElementById('rhythm-bars');
-            rhythmBars.innerHTML = studyRhythm.map(day => `
+            // Minimum visible height of 4% so empty days still show a stub bar
+            rhythmBars.innerHTML = rhythm.map(day => `
                 <div class="rhythm-day">
                     <div class="rhythm-bar-track">
-                        <div class="rhythm-bar" style="height:${day.value}%"></div>
+                        <div class="rhythm-bar" style="height:${Math.max(4, day.value)}%"></div>
                     </div>
                     <label>${day.label}</label>
                 </div>
             `).join('');
+
+            const note = describeRhythm(rhythm);
+            const noteEl = document.querySelector('.rhythm-note');
+            if (noteEl) {
+                noteEl.innerHTML = `
+                    <div>
+                        <strong>${escapeHtml(note.headline)}</strong>
+                        <span>${escapeHtml(note.sub)}</span>
+                    </div>
+                    <div class="rhythm-badge">${escapeHtml(note.badge)}</div>
+                `;
+            }
         }
 
-        function renderKpis(periodData) {
-            document.getElementById('kpi-streak').innerText = `${periodData.totals.current_streak_days} days`;
-            document.getElementById('kpi-reviewed').innerText = periodData.totals.total_cards_reviewed;
-            document.getElementById('kpi-sessions').innerText = periodData.overview.study_sessions;
-            document.getElementById('kpi-decks').innerText = periodData.overview.decks_studied;
-            document.getElementById('kpi-reviewed-sub').innerText = periodData.overview.reviewedSub;
-            document.getElementById('kpi-sessions-sub').innerText = periodData.overview.sessionsSub;
-            document.getElementById('kpi-decks-sub').innerText = periodData.overview.decksSub;
-            document.getElementById('chart-copy').innerText = periodData.overview.chartCopy;
-        }
+        // ----- Period switch + init -----
 
-        function setActivePeriod(periodKey) {
-            const periodData = analyticsByPeriod[periodKey];
-            const chartPoints = buildChartPoints(periodKey, periodData.daily);
-
+        async function setActivePeriod(periodKey) {
             document.querySelectorAll('.period-chip').forEach(button => {
                 button.classList.toggle('active', button.dataset.period === periodKey);
             });
 
-            renderKpis(periodData);
-            renderChart(chartPoints, periodKey);
+            try {
+                const [totals, daily, decks] = await Promise.all([
+                    fetchTotals(),
+                    fetchDaily(periodKey),
+                    fetchDecks()
+                ]);
+                if (!totals || !daily) return; // 401 already redirected
+
+                const config = PERIOD_CONFIG[periodKey];
+                renderKpis({
+                    streak: totals.current_streak_days ?? 0,
+                    reviewed: totalReviewedInPeriod(daily),
+                    sessions: studySessionsInPeriod(daily),
+                    decksCount: decks ? decks.length : 0,
+                    copy: config
+                });
+
+                renderChart(buildChartPoints(periodKey, daily), periodKey);
+                renderRhythm(studyRhythmFromDaily(daily));
+            } catch (err) {
+                console.error('Failed to load analytics', err);
+            }
         }
 
-        document.querySelectorAll('.period-chip').forEach(button => {
-            button.addEventListener('click', () => setActivePeriod(button.dataset.period));
-        });
+        async function init() {
+            if (!requireAuth()) return;
 
-        renderDeckInsights();
-        renderRhythm();
-        setActivePeriod('30d');
+            document.querySelectorAll('.period-chip').forEach(button => {
+                button.addEventListener('click', () => setActivePeriod(button.dataset.period));
+            });
+
+            // Decks list is period-independent, render once
+            fetchDecks().then(decks => {
+                if (decks) renderDecksInsight(decks);
+            }).catch(err => console.error('Failed to load decks', err));
+
+            await setActivePeriod('30d');
+        }
 
         document.addEventListener('click', () => {
             const dd = document.getElementById('avatar-dropdown');
             if (dd) dd.classList.remove('open');
         });
 
+        init();
     </script>
 </body>
 </html>
