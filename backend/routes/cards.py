@@ -165,12 +165,9 @@ async def delete_card(
     await card.delete()
 
 
-# ---------------------------------------------------------------------------
-# Review endpoint — wires the study session UI into the Leitner scheduler.
-# ---------------------------------------------------------------------------
-# The frontend (study_session.html) POSTs here with a 1-4 rating per card.
-# We map that to a Leitner correct/incorrect signal, then delegate the heavy
-# lifting (schedule update, daily aggregates, ReviewEvent row) to leitner.py.
+# the frontend (study_session.html) POSTs here with a 1-4 rating per card
+# we map that to a Leitner correct/incorrect signal then delegate the heavy
+# lifting (schedule update, daily aggregates, ReviewEvent row) to leitner.py
 
 class CardReviewRequest(BaseModel):
     # 1 = Again, 2 = Hard, 3 = Good, 4 = Easy (matches study_session.html buttons)
