@@ -1,8 +1,11 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 
 from deps.database import Card, Deck
+from deps.leitner import review_card_leitner
 from deps.security import get_current_user
 
 
@@ -160,3 +163,69 @@ async def delete_card(
     """Delete a card (study progress cascades via the DB foreign key)."""
     card = await get_card_for_user(card_id, user.id)
     await card.delete()
+
+
+# ---------------------------------------------------------------------------
+# Review endpoint — wires the study session UI into the Leitner scheduler.
+# ---------------------------------------------------------------------------
+# The frontend (study_session.html) POSTs here with a 1-4 rating per card.
+# We map that to a Leitner correct/incorrect signal, then delegate the heavy
+# lifting (schedule update, daily aggregates, ReviewEvent row) to leitner.py.
+
+class CardReviewRequest(BaseModel):
+    # 1 = Again, 2 = Hard, 3 = Good, 4 = Easy (matches study_session.html buttons)
+    rating: int
+    # Optional client-reported response time in milliseconds.
+    response_time_ms: Optional[int] = None
+
+
+class CardReviewResponse(BaseModel):
+    card_id: int
+    correct: bool
+    new_box: int
+    next_review: datetime
+    streak: int
+
+
+@cards_route.post("/{card_id}/review", response_model=CardReviewResponse)
+async def review_card(
+    card_id: int,
+    payload: CardReviewRequest,
+    user=Depends(get_current_user),
+):
+    """Record a card review and advance the Leitner schedule.
+
+    Maps the 1-4 rating from the study session UI to the boolean `correct`
+    signal the Leitner module expects: `Again` (1) counts as incorrect,
+    everything else counts as correct.
+    """
+    if payload.rating not in (1, 2, 3, 4):
+        raise HTTPException(
+            status_code=400,
+            detail="rating must be 1 (Again), 2 (Hard), 3 (Good), or 4 (Easy)",
+        )
+
+    correct = payload.rating >= 2
+
+    try:
+        progress = await review_card_leitner(
+            user_id=user.id,
+            card_id=card_id,
+            correct=correct,
+            response_time_ms=payload.response_time_ms,
+        )
+    except ValueError:
+        # Card with the given id does not exist.
+        raise HTTPException(status_code=404, detail="Card not found")
+    except PermissionError:
+        # Card exists but belongs to someone else. Return 404 so we don't
+        # leak the existence of other users' cards.
+        raise HTTPException(status_code=404, detail="Card not found")
+
+    return CardReviewResponse(
+        card_id=card_id,
+        correct=correct,
+        new_box=progress.box,
+        next_review=progress.next_review,
+        streak=progress.streak,
+    )
