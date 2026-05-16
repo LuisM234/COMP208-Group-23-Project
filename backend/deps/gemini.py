@@ -1,4 +1,6 @@
+import json
 import os
+import re
 from typing import cast
 
 from fastapi import HTTPException, status
@@ -43,6 +45,27 @@ class GeminiHTTPException(HTTPException):
         super().__init__(status_code=status_code, detail=detail)
         self.run = run
 
+
+def _parse_json_array(raw_text: str) -> list[object]:
+    """Parse a JSON array even if Gemini wraps it in markdown fences."""
+    cleaned = raw_text.strip()
+    if cleaned.startswith("```"):
+        cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\s*```$", "", cleaned)
+
+    try:
+        data = json.loads(cleaned)
+    except json.JSONDecodeError:
+        match = re.search(r"\[[\s\S]*\]", cleaned)
+        if not match:
+            raise
+        data = json.loads(match.group(0))
+
+    if not isinstance(data, list):
+        raise ValueError("Gemini response must be a JSON array")
+
+    return data
+
 class GeminiWrapper:
     """Async Gemini wrapper class to create custom callbacks and handle responses.
 
@@ -73,11 +96,13 @@ class GeminiWrapper:
         self, notes: str, num_cards: int
     ) -> tuple[list[Flashcard] | None, GeminiResponse]:
         # config what gemini should do, generate flashcards, how many, and return as json matching schema
-        config = types.GenerateContentConfig(
-            system_instruction=f"You generate study flashcards from notes. Return exactly {num_cards} items.",
-            temperature=0.3,
-            response_mime_type="application/json",
-            response_schema=list[Flashcard],
+        config = types.GenerateContentConfig(temperature=0.3)
+        prompt = (
+            "Generate study flashcards from the notes below.\n"
+            f"Return exactly {num_cards} items as raw JSON only.\n"
+            'Each item must be shaped like {"question": "...", "answer": "..."}.\n'
+            "Do not include markdown, comments, or extra text.\n\n"
+            f"Notes:\n{notes}"
         )
         # set up http options, including api version and any aiohttp settings
         http_options = types.HttpOptions(
@@ -93,7 +118,7 @@ class GeminiWrapper:
                 # make the API call to generate content with the given notes and config
                 response = await aclient.models.generate_content(
                     model=self.model,
-                    contents=notes,
+                    contents=prompt,
                     config=config,
                 )
         # handle API errors separately to capture status codes, then catch-all for any other exceptions
@@ -132,15 +157,14 @@ class GeminiWrapper:
                 error_message="Empty response from Gemini",
                 raw_response=raw_text,
             )
-        # attempts to parse the response as json according to the schema we defined in the config
-        parsed = response.parsed
-        #  if failed completely, return an error response indicating invalid json
-        if not parsed:
+        try:
+            parsed = _parse_json_array(raw_text)
+        except (json.JSONDecodeError, ValueError) as exc:
             return None, GeminiResponse(
                 model_name=self.model,
                 status="invalid_json",
                 error_code=None,
-                error_message="Gemini response is not valid JSON",
+                error_message=f"Gemini response is not valid JSON: {exc}",
                 raw_response=raw_text,
             )
         #validates eahc item in the parsed response against our Flashcard model, if any item fails validation, return an error response with details
@@ -208,14 +232,17 @@ class GeminiWrapper:
             The difficulty level of the questions (e.g., "easy", "medium", "hard").
         """
         config = types.GenerateContentConfig(
-            system_instruction=(
-                f"You generate exam-style multiple choice questions from notes. "
-                f"Return exactly {num_questions} items. Correct answer should be one of the lettered options. "
-                f"Difficulty level: {difficulty}."
-            ),
             temperature=0.3,
-            response_mime_type="application/json",
-            response_schema=list[GeneratedMCQ],
+        )
+        prompt = (
+            "Generate exam-style multiple choice questions from the notes below.\n"
+            f"Return exactly {num_questions} items as raw JSON only.\n"
+            "Each item must include question, option_a, option_b, option_c, option_d, "
+            "correct_answer, and explanation.\n"
+            "correct_answer must be one of A, B, C, or D.\n"
+            f"Difficulty level: {difficulty}.\n"
+            "Do not include markdown, comments, or extra text.\n\n"
+            f"Notes:\n{notes}"
         )
 
         http_options = types.HttpOptions(
@@ -230,7 +257,7 @@ class GeminiWrapper:
             ).aio as aclient:
                 response = await aclient.models.generate_content(
                     model=self.model,
-                    contents=notes,
+                    contents=prompt,
                     config=config,
                 )
         except errors.APIError as exc:
@@ -266,13 +293,14 @@ class GeminiWrapper:
                 raw_response=raw_text,
             )
         
-        parsed = response.parsed
-        if not parsed:
+        try:
+            parsed = _parse_json_array(raw_text)
+        except (json.JSONDecodeError, ValueError) as exc:
             return None, GeminiResponse(
                 model_name=self.model,
                 status="invalid_json",
                 error_code=None,
-                error_message="Gemini response is not valid JSON",
+                error_message=f"Gemini response is not valid JSON: {exc}",
                 raw_response=raw_text,
             )
             
