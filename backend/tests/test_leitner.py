@@ -16,7 +16,7 @@ from deps.database import (
     User,
 )
 from deps.leitner import (
-    BOX_INTERVAL_DAYS,
+    BOX_INTERVALS,
     MAX_BOX,
     MIN_BOX,
     WRONG_RELEARNING_DELAY_MINUTES,
@@ -93,7 +93,7 @@ class TestNextBox:
     def test_correct_advances(self):
         assert _next_box(1, True) == 2
         assert _next_box(2, True) == 3
-        assert _next_box(4, True) == 5
+        assert _next_box(4, True) == 4
 
     def test_correct_caps_at_max(self):
         assert _next_box(MAX_BOX, True) == MAX_BOX
@@ -280,7 +280,7 @@ class TestReviewCardLeitner:
         assert progress.box == 2
         assert progress.streak == 1
         assert progress.last_result == "correct"
-        assert progress.next_review == now + timedelta(days=BOX_INTERVAL_DAYS[2])
+        assert progress.next_review == now + BOX_INTERVALS[2]
 
     @pytest.mark.asyncio
     async def test_wrong_resets_box(self):
