@@ -52,7 +52,7 @@
             z-index: -1;
         }
 
-        /* ── Top Nav ── */
+        /*  Top Nav  */
         .top-nav {
             min-height: var(--nav-height);
             background: var(--surface);
@@ -128,7 +128,7 @@
             box-shadow: 0 14px 26px rgba(17, 17, 17, 0.18);
         }
 
-        /* ── Main ── */
+        /* Main */
         .main {
             margin-top: 22px;
             padding: 22px 8px 30px 14px;
@@ -165,7 +165,7 @@
 
         .breadcrumb span { color: var(--text-primary); font-weight: 500; }
 
-        /* ── Card ── */
+        /* Card */
         .card {
             background: var(--surface-strong);
             border: 1px solid var(--surface-border);
@@ -227,7 +227,7 @@
             min-height: 18px;
         }
 
-        /* ── Section Header ── */
+        /* Section Header */
         .section-header {
             display: flex;
             align-items: center;
@@ -240,7 +240,7 @@
         .section-title { font-size: 1.1em; font-weight: 800; letter-spacing: -0.02em; }
         .btn-group { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
-        /* ── Buttons ── */
+        /* Buttons */
         .btn {
             display: inline-flex;
             align-items: center;
@@ -285,7 +285,7 @@
         .btn-danger { color: var(--danger); border-color: var(--danger); }
         .btn-danger:hover { background: var(--danger-bg); }
 
-        /* ── Table ── */
+        /* Table*/
         .table-wrap { overflow-x: auto; }
 
         table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
@@ -355,7 +355,7 @@
             font-size: 0.94em;
         }
 
-        /* ── Modal ── */
+        /* Modal */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -641,15 +641,16 @@
             <div class="section-header">
                 <div class="section-title" id="cards-heading">Cards</div>
                 <div class="btn-group">
-                    <button class="btn">
+                    <button class="btn" id="import-btn">
                         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                         Import
                     </button>
-                    <button class="btn">
+                    <input type="file" id="import-file-input" accept=".csv" style="display:none;">
+                    <button class="btn" id="export-btn">
                         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                         Export
                     </button>
-                    <button class="btn">
+                    <button class="btn" id="share-btn">
                         <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
                         Share
                     </button>
@@ -730,6 +731,16 @@
         </div>
     </div>
 
+    <div class="confirm-overlay" id="import-result-overlay">
+        <div class="confirm-box">
+            <div class="confirm-title" id="import-result-title">Import Complete</div>
+            <div class="confirm-text" id="import-result-text"></div>
+            <div class="confirm-footer">
+                <button class="btn btn-primary" id="import-result-ok-btn">OK</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
         ? 'http://localhost:8000'
@@ -749,7 +760,7 @@
             };
         }
 
-        // ── Demo data fallback ──
+        // Demo data fallback
         const DEMO_DECKS = {
             1: { id:1, title:'Spanish Vocabulary',       description:'Common vocabulary and phrases.' },
             2: { id:2, title:'Biology - Cell Structure',  description:'Comprehensive deck covering cell biology fundamentals' },
@@ -798,7 +809,7 @@
             return demoCards[did];
         }
 
-        // ── API calls (with demo fallback) ──
+        // API calls (with demo fallback)
 
         async function fetchDeck(id) {
             try {
@@ -883,7 +894,7 @@
             }
         }
 
-        // ── Render ──
+        // Render
 
         function renderCards(cards) {
             const tbody = document.getElementById('cards-tbody');
@@ -948,7 +959,7 @@
                                 day: '2-digit', month: '2-digit', 
                                 hour: '2-digit', minute: '2-digit' 
                             })
-                            : null,
+                        : null,
                         next_interval: p?.next_review
                             ? new Date(p.next_review).toLocaleString('en-GB', { 
                                 day: '2-digit', month: '2-digit', 
@@ -963,7 +974,7 @@
             }
         }
 
-        // ── Deck settings ──
+        // Deck settings
 
         async function loadDeck() {
             if (!deckId) return;
@@ -1002,7 +1013,7 @@
             }
         });
 
-        // ── Delete Deck ──
+        // Delete Deck
         document.getElementById('delete-deck-btn').addEventListener('click', () => {
             document.getElementById('confirm-deck-overlay').classList.add('open');
         });
@@ -1026,7 +1037,7 @@
             }
         });
 
-        // ── Card Modal ──
+        // Card Modal
         const modalOverlay = document.getElementById('modal-overlay');
         const modalTitle   = document.getElementById('modal-title');
         const modalFront   = document.getElementById('modal-front');
@@ -1097,7 +1108,7 @@
             }
         });
 
-        // ── Delete Card Confirm ──
+        // Delete Card Confirm
         let deletingCardId = null;
 
         function confirmDeleteCard(cardId) {
@@ -1136,10 +1147,92 @@
                 closeModal();
                 document.getElementById('confirm-overlay').classList.remove('open');
                 document.getElementById('confirm-deck-overlay').classList.remove('open');
+                document.getElementById('import-result-overlay').classList.remove('open');
             }
         });
 
-        // ── Init ──
+        
+        //  Export 
+    document.getElementById('export-btn').addEventListener('click', () => {
+        const rows = [];
+        document.querySelectorAll('#cards-tbody tr').forEach(tr => {
+            const tds = tr.querySelectorAll('td');
+            if (tds.length < 3) return;
+            const front = tds[1].innerText.trim();
+            const back  = tds[2].innerText.trim();
+            if (front || back) rows.push([front, back]);
+        });
+        if (!rows.length) { document.getElementById('error-message').innerText = 'No cards to export.'; return; }
+        const deckName = document.getElementById('deck-name').value.trim() || `deck-${deckId}`;
+        const csv = 'front,back\n' + rows.map(([f, b]) =>
+            `"${f.replace(/"/g, '""')}","${b.replace(/"/g, '""')}"`
+        ).join('\n');
+        const a = Object.assign(document.createElement('a'), {
+            href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })),
+            download: `${deckName.replace(/[^a-z0-9]/gi, '_')}.csv`
+        });
+        a.click();
+    });
+
+    //  Import 
+    document.getElementById('import-btn').addEventListener('click', () => {
+        document.getElementById('import-file-input').value = '';
+        document.getElementById('import-file-input').click();
+    });
+
+    document.getElementById('import-file-input').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const lines = (await file.text()).trim().split('\n');
+        const firstLine = lines[0].toLowerCase().replace(/"/g, '');
+        const dataLines = (firstLine.startsWith('front') || firstLine.startsWith('question')) ? lines.slice(1) : lines;
+
+        function parseCSVLine(line) {
+            const result = []; let cur = '', inQuote = false;
+            for (let i = 0; i < line.length; i++) {
+                const ch = line[i];
+                if (ch === '"') { if (inQuote && line[i+1] === '"') { cur += '"'; i++; } else inQuote = !inQuote; }
+                else if (ch === ',' && !inQuote) { result.push(cur.trim()); cur = ''; }
+                else cur += ch;
+            }
+            result.push(cur.trim()); return result;
+        }
+
+        const cards = dataLines.map(parseCSVLine).filter(c => c.length >= 2 && (c[0] || c[1]));
+        if (!cards.length) { showImportResult('Import Failed', 'No valid rows found. CSV must have front and back columns.'); return; }
+
+        let imported = 0, failed = 0;
+        for (const [front, back] of cards) {
+            try { await createCard(front, back); imported++; } catch { failed++; }
+        }
+        await loadCards();
+        showImportResult('Import Complete', `${imported} card(s) imported.${failed ? ` ${failed} failed.` : ''}`);
+    });
+
+    function showImportResult(title, text) {
+        document.getElementById('import-result-title').innerText = title;
+        document.getElementById('import-result-text').innerText  = text;
+        document.getElementById('import-result-overlay').classList.add('open');
+    }
+    document.getElementById('import-result-ok-btn').addEventListener('click', () => {
+        document.getElementById('import-result-overlay').classList.remove('open');
+    });
+
+    //  Share 
+    document.getElementById('share-btn').addEventListener('click', async () => {
+        const url = `${window.location.origin}${window.location.pathname}?deck_id=${deckId}`;
+        const btn = document.getElementById('share-btn');
+        try {
+            await navigator.clipboard.writeText(url);
+            btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
+        } catch { prompt('Copy this link:', url); }
+        setTimeout(() => {
+            btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share`;
+        }, 2200);
+    });
+
+
+        //  Init 
         loadDeck();
         loadCards();
 

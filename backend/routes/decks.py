@@ -9,9 +9,9 @@ from deps.leitner import get_due_study_progress, initialise_progress_for_deck
 decks_route = APIRouter(prefix="/decks", tags=["Decks"])
 
 
-# ──────────────────────────────────────────────
+
 # Pydantic schemas
-# ──────────────────────────────────────────────
+
 
 class DeckCreate(BaseModel):
     title: str
@@ -41,9 +41,9 @@ class DeckMCQsResponse(BaseModel):
     
     created_at: datetime
 
-# ──────────────────────────────────────────────
+
 # Helper
-# ──────────────────────────────────────────────
+
 
 async def get_deck_for_user(deck_id: int, user_id: int) -> Deck:
     """Fetch a deck by ID that belongs to the current user.
@@ -56,9 +56,9 @@ async def get_deck_for_user(deck_id: int, user_id: int) -> Deck:
     return deck
 
 
-# ──────────────────────────────────────────────
+
 # Routes
-# ──────────────────────────────────────────────
+
 
 @decks_route.post("/", response_model=DeckResponse, status_code=201)
 async def create_deck(payload: DeckCreate, user=Depends(get_current_user)):
