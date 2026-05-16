@@ -4,6 +4,7 @@ from typing import Optional
 from deps.database import Deck
 from deps.security import get_current_user
 from datetime import datetime
+from deps.leitner import get_due_study_progress, initialise_progress_for_deck
 
 decks_route = APIRouter(prefix="/decks", tags=["Decks"])
 
@@ -126,3 +127,83 @@ async def delete_deck(deck_id: int, user=Depends(get_current_user)):
     """Delete a deck (cards cascade-delete via the DB foreign key)."""
     deck = await get_deck_for_user(deck_id, user.id)
     await deck.delete()
+
+class DueCardResponse(BaseModel):
+    id: int
+    question: str
+    answer: str
+    box: int
+    next_review: datetime
+
+@decks_route.get("/{deck_id}/due", response_model=list[DueCardResponse])
+async def get_due_cards(deck_id: int, user=Depends(get_current_user)):
+    await get_deck_for_user(deck_id, user.id)
+    await initialise_progress_for_deck(user_id=user.id, deck_id=deck_id)
+    
+    from deps.database import StudyProgress, Card
+    from datetime import datetime, timezone
+    
+    now = datetime.now(timezone.utc)
+
+    # Debug: check all progress rows regardless of due date
+    all_rows = await StudyProgress.filter(
+        user_id=user.id,
+        card__deck_id=deck_id,
+    ).prefetch_related("card").all()
+    
+    for r in all_rows:
+        print(f"Card {r.card.id}: box={r.box}, next_review={r.next_review}, now={now}, due={r.next_review <= now}")
+
+    progress_rows = await StudyProgress.filter(
+        user_id=user.id,
+        card__deck_id=deck_id,
+        next_review__lte=now,
+    ).prefetch_related("card").all()
+    
+    return [
+        DueCardResponse(
+            id=p.card.id,
+            question=p.card.question,
+            answer=p.card.answer,
+            box=p.box,
+            next_review=p.next_review,
+        )
+        for p in progress_rows
+    ]
+
+@decks_route.get("/{deck_id}/cram", response_model=list[DueCardResponse])
+async def get_cram_cards(deck_id: int, user=Depends(get_current_user)):
+    """Return ALL cards in the deck regardless of schedule — for cram mode."""
+    await get_deck_for_user(deck_id, user.id)
+    from deps.database import Card
+    cards = await Card.filter(deck_id=deck_id).all()
+    return [
+        DueCardResponse(
+            id=c.id,
+            question=c.question,
+            answer=c.answer,
+            box=0,
+            next_review=datetime.now(timezone.utc),
+        )
+        for c in cards
+    ]
+
+
+@decks_route.get("/{deck_id}/progress")
+async def get_deck_progress(deck_id: int, user=Depends(get_current_user)):
+    """Return study progress for all cards in a deck, regardless of due date."""
+    await get_deck_for_user(deck_id, user.id)
+    from deps.database import StudyProgress
+    rows = await StudyProgress.filter(
+        user_id=user.id,
+        card__deck_id=deck_id,
+    ).prefetch_related("card").all()
+    return [
+        {
+            "card_id": p.card.id,
+            "box": p.box,
+            "last_reviewed": p.last_reviewed.isoformat() if p.last_reviewed else None,
+            "next_review": p.next_review.isoformat() if p.next_review else None,
+        }
+        for p in rows
+    ]

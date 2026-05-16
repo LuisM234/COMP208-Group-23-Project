@@ -22,19 +22,18 @@ from deps.database import (
 # The box number is the card's current level, and the value is how many days
 # to wait before showing that card again.
 
-BOX_INTERVAL_DAYS: dict[int, int] = {
-    1: 1,
-    2: 2,
-    3: 4,
-    4: 7,
-    5: 15,
+BOX_INTERVALS: dict[int, timedelta] = {
+    1: timedelta(minutes=1),
+    2: timedelta(minutes=6),
+    3: timedelta(minutes=10),
+    4: timedelta(days=4),
 }
-MIN_BOX = min(BOX_INTERVAL_DAYS)
-MAX_BOX = max(BOX_INTERVAL_DAYS)
+MIN_BOX = 1
+MAX_BOX = 4
 
 # Wrong answers are scheduled for a short retry first instead of waiting a
 # full day. This keeps misses in short-term memory and improves relearning.
-WRONG_RELEARNING_DELAY_MINUTES = 10
+WRONG_RELEARNING_DELAY_MINUTES = 1
 
 # ---------------------------------------------------------------------------
 # Session size bounds
@@ -444,9 +443,7 @@ async def review_card_leitner(
         progress.last_reviewed = now
 
         if correct:
-            progress.next_review = now + timedelta(
-                days=BOX_INTERVAL_DAYS[progress.box]
-            )
+            progress.next_review = now + BOX_INTERVALS[progress.box]
             progress.streak += 1
             progress.last_result = "correct"
         else:
@@ -583,9 +580,7 @@ async def review_cards_bulk(
             progress.last_reviewed = now
 
             if r.correct:
-                progress.next_review = now + timedelta(
-                    days=BOX_INTERVAL_DAYS[progress.box]
-                )
+                progress.next_review = now + BOX_INTERVALS[progress.box]
                 progress.streak += 1
                 progress.last_result = "correct"
                 current_streak += 1

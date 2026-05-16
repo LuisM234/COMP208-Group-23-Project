@@ -930,8 +930,34 @@
         async function loadCards() {
             if (!deckId) { renderCards([]); return; }
             try {
-                const cards = await fetchCards(deckId);
-                renderCards(cards);
+                const [cards, progress] = await Promise.all([
+                    fetchCards(deckId),
+                    fetch(`${API_BASE}/decks/${deckId}/progress`, { headers: authHeaders() })
+                        .then(r => r.ok ? r.json() : [])
+                ]);
+
+                const progressMap = {};
+                progress.forEach(p => { progressMap[p.card_id] = p; });
+
+                const merged = cards.map(card => {
+                    const p = progressMap[card.id];
+                    return {
+                        ...card,
+                        last_reviewed: p?.last_reviewed
+                            ? new Date(p.last_reviewed).toLocaleString('en-GB', { 
+                                day: '2-digit', month: '2-digit', 
+                                hour: '2-digit', minute: '2-digit' 
+                            })
+                            : null,
+                        next_interval: p?.next_review
+                            ? new Date(p.next_review).toLocaleString('en-GB', { 
+                                day: '2-digit', month: '2-digit', 
+                                hour: '2-digit', minute: '2-digit' 
+                            })
+                            : null,
+                    };
+                });
+                renderCards(merged);
             } catch (err) {
                 document.getElementById('error-message').innerText = err.message;
             }

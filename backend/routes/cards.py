@@ -202,7 +202,7 @@ async def review_card(
             detail="rating must be 1 (Again), 2 (Hard), 3 (Good), or 4 (Easy)",
         )
 
-    correct = payload.rating >= 2
+    correct = payload.rating >= 3  # Only Good (3) and Easy (4) advance the box
 
     try:
         progress = await review_card_leitner(

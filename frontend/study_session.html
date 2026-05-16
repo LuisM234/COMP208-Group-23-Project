@@ -517,6 +517,8 @@
         ? 'http://localhost:8000'
         : 'https://comp208-group-23-project-production.up.railway.app';
     const DECK_ID = new URLSearchParams(window.location.search).get('deck_id') || 2;
+    const MODE = new URLSearchParams(window.location.search).get('mode') || 'study';
+
 
     document.getElementById('user-initials').innerText =
       localStorage.getItem('userInitials') || 'JD';
@@ -541,7 +543,10 @@
         if (dr.status === 401) { window.location.href = 'index.html'; return; }
         if (dr.ok) { const d = await dr.json(); deckTitle = d.title || 'Study Session'; deckSub = d.description || ''; }
 
-        const cr = await fetch(`${API}/decks/${DECK_ID}/cards`, { headers: authHdr() });
+        const endpoint = MODE === 'cram'
+          ? `${API}/decks/${DECK_ID}/cards`
+          : `${API}/decks/${DECK_ID}/due`;
+        const cr = await fetch(endpoint, { headers: authHdr() });
         if (cr.ok) {
           cards = await cr.json();
         } else {
@@ -570,7 +575,7 @@
         <div class="session-header">
           <div>
             <div class="session-title">Study Session</div>
-            <div class="session-subtitle">${deckTitle}</div>
+            <div class="session-subtitle">${deckTitle}${MODE === 'cram' ? ' · Cram Mode' : ''}</div>
           </div>
           <a href="javascript:history.back()" class="close-btn" title="Exit">✕</a>
         </div>
