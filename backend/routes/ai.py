@@ -143,13 +143,14 @@ async def generate_mcq(
             for card in deck_cards
         )
         
-    generation_run = AIGenerationRun(
+    generation_run = await AIGenerationRun.create(
         kind="mcq",
         input_type="notes" if notes is not None else "deck",
         requested_count=num_questions,
         difficulty=difficulty,
         user=current_user,
         deck=deck,
+        status="pending",
     )
 
     generated, response = await gemini_wrapper.generate_mcq_questions(
@@ -219,7 +220,7 @@ async def generate_mcq(
             "raw_response": response.raw_response,
         }
     )
-    await generation_run.save()
+    
 
     await MCQQuestion.bulk_create(questions)
 
@@ -260,7 +261,6 @@ class CardResponse(BaseModel):
 async def generate_cards(
     cards_request: GenerateCardsRequest,
     current_user: User = Depends(get_current_user),
-    gemini: GeminiWrapper = Depends(get_gemini_wrapper),
 ) -> list[CardResponse]:
     """Generate flashcards from notes or a deck using Gemini.
 
@@ -282,15 +282,23 @@ async def generate_cards(
         raise HTTPException(status_code=404, detail="Deck not found or you do not have access to it",
         )
     
+    gemini = get_gemini_wrapper()
 
     #make a variable to store flashcards
     # await tells the program to stop specific task to let other taks run unitl ai finishes generating the cards
     # notes is from the request body, num_cards is also from the request body, we would pass these to the gemini wrapper which would call the gemini api and return a list of flashcards
-    generation_run = AIGenerationRun(
+    generation_run = await AIGenerationRun.create(
         kind="flashcard",
         input_type="notes",
         requested_count=cards_request.num_cards,
+        user=current_user,
+        deck=deck,
+        status="pending",
     )
+
+    await generation_run.save()
+
+
 
     #unpacks the tuple into two variables, generated and response
     #await tells python to wait for background task to finish 
