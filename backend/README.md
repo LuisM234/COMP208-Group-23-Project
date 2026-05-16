@@ -161,3 +161,24 @@ If this makes 0 sense, refer to these docs about FastAPI: https://fastapi.tiango
 And probably have a look around the different sections of the library (or ask AI to be honest)
 
 ~~We can host the backend on our machines, and have the database in the cloud so we don't have to worry about hosting the entire system anywhere. This is subject to change if anyone has any other ideas.~~
+
+
+### Running Actual Website 
+
+# type in CD backend - to get into backend folder 
+# type in uv sync - to get updated packages/ audit packages 
+# YOU have to export all the things in .env for everything to work, so type in:
+# export DATABASE_URL="mysql://2mPawY94BstQbW9.root:Qe6t4KQwUAad4eb6@gateway01.eu-central-1.prod.aws.tidbcloud.com:4000/flashcard?ssl=1”
+# export GEMINI_API_KEY="AIzaSyD6kpsT_wNtw2O33pGJ4FQ9AfHN4fW2QWY"
+# export GEMINI_MODEL="gemini-2.5-flash"
+# type in, uv run uvicorn main:app --reload
+# Download Live Server, then press GO Live, 
+# press on FRONTEND Folder and should work.
+
+
+
+# if you have ports open, and you get an error 48 you should: 
+# type in lsof -i :8000, you should see the ports open, 
+# to kill the ports, type in kill -9 (then enter your port id)
+# then run, uv run uvicorn main:app --reload
+# and continue as above
