@@ -1,15 +1,13 @@
-import json
 import os
 import re
 from typing import cast
 
+import orjson
+from deps.database import AIGenerationRun
 from fastapi import HTTPException, status
 from google import genai
 from google.genai import errors, types
 from pydantic import BaseModel, ValidationError
-
-
-from deps.database import AIGenerationRun
 
 
 class Flashcard(BaseModel):
@@ -17,7 +15,8 @@ class Flashcard(BaseModel):
 
     question: str
     answer: str
-    
+
+
 class GeneratedMCQ(BaseModel):
     """Model for a multiple-choice question with options and the correct answer."""
 
@@ -29,7 +28,8 @@ class GeneratedMCQ(BaseModel):
 
     correct_answer: str
     explanation: str
-    
+
+
 class GeminiResponse(BaseModel):
     model_name: str
     status: str
@@ -54,17 +54,18 @@ def _parse_json_array(raw_text: str) -> list[object]:
         cleaned = re.sub(r"\s*```$", "", cleaned)
 
     try:
-        data = json.loads(cleaned)
-    except json.JSONDecodeError:
+        data = orjson.loads(cleaned)
+    except orjson.JSONDecodeError:
         match = re.search(r"\[[\s\S]*\]", cleaned)
         if not match:
             raise
-        data = json.loads(match.group(0))
+        data = orjson.loads(match.group(0))
 
     if not isinstance(data, list):
         raise ValueError("Gemini response must be a JSON array")
 
     return data
+
 
 class GeminiWrapper:
     """Async Gemini wrapper class to create custom callbacks and handle responses.
@@ -95,6 +96,20 @@ class GeminiWrapper:
     async def generate_flashcards(
         self, notes: str, num_cards: int
     ) -> tuple[list[Flashcard] | None, GeminiResponse]:
+        """Generates flashcards from notes using Gemini API.
+
+        Parameters
+        ----------
+        notes : str
+            The raw notes to generate flashcards from.
+        num_cards : int
+            The number of flashcards to generate.
+
+        Returns
+        -------
+        list[Flashcard]
+            A list of generated flashcards. Each flashcard contains a question and an answer.
+        """
         # config what gemini should do, generate flashcards, how many, and return as json matching schema
         config = types.GenerateContentConfig(temperature=0.3)
         prompt = (
@@ -108,7 +123,7 @@ class GeminiWrapper:
         http_options = types.HttpOptions(
             api_version=self.api_version,
             async_client_args={},
-        )   
+        )
         # make the async call to Gemini API, handle any errors, and parse the response
         try:
             async with genai.Client(
@@ -146,7 +161,7 @@ class GeminiWrapper:
                 error_message="Unknown error occurred while contacting Gemini",
                 raw_response=str(exc),
             )
-        #gets raw text from gemini's repsonse
+        # gets raw text from gemini's repsonse
         raw_text = response.text
         # checks if gemini returned nothing or just whitespace
         if not raw_text or not raw_text.strip():
@@ -159,7 +174,7 @@ class GeminiWrapper:
             )
         try:
             parsed = _parse_json_array(raw_text)
-        except (json.JSONDecodeError, ValueError) as exc:
+        except (orjson.JSONDecodeError, ValueError) as exc:
             return None, GeminiResponse(
                 model_name=self.model,
                 status="invalid_json",
@@ -167,9 +182,11 @@ class GeminiWrapper:
                 error_message=f"Gemini response is not valid JSON: {exc}",
                 raw_response=raw_text,
             )
-        #validates eahc item in the parsed response against our Flashcard model, if any item fails validation, return an error response with details
+        # validates eahc item in the parsed response against our Flashcard model, if any item fails validation, return an error response with details
         try:
-            validated = [Flashcard.model_validate(item) for item in cast(list[object], parsed)]
+            validated = [
+                Flashcard.model_validate(item) for item in cast(list[object], parsed)
+            ]
         except ValidationError as exc:
             return None, GeminiResponse(
                 model_name=self.model,
@@ -177,8 +194,8 @@ class GeminiWrapper:
                 error_code=None,
                 error_message=f"Schema validation failed: {exc}",
                 raw_response=raw_text,
-            )   
-        
+            )
+
         # if gemini returned the exact number of cards we asked for
         if len(validated) != num_cards:
             return None, GeminiResponse(
@@ -188,7 +205,7 @@ class GeminiWrapper:
                 error_message=f"Expected {num_cards} flashcards, got {len(validated)}",
                 raw_response=raw_text,
             )
-        #if everything is validated and correct, return the flashcards, with no error messages and success reply
+        # if everything is validated and correct, return the flashcards, with no error messages and success reply
         return validated, GeminiResponse(
             model_name=self.model,
             status="success",
@@ -196,24 +213,7 @@ class GeminiWrapper:
             error_message=None,
             raw_response=raw_text,
         )
-    
-        """Generates flashcards from notes using Gemini API.
-        
-        Parameters
-        ----------
-        notes : str
-            The raw notes to generate flashcards from.
-        num_cards : int
-            The number of flashcards to generate.
-            
-        Returns
-        -------
-        list[Flashcard]
-            A list of generated flashcards. Each flashcard contains a question and an answer.
-        """
 
-
-    
     async def generate_mcq_questions(
         self,
         notes: str,
@@ -221,7 +221,7 @@ class GeminiWrapper:
         difficulty: str,
     ) -> tuple[list[GeneratedMCQ] | None, GeminiResponse]:
         """Generates multiple-choice questions from notes using Gemini API.
-        
+
         Parameters
         ----------
         notes : str
@@ -271,7 +271,7 @@ class GeminiWrapper:
                 status=status_name,
                 error_code=exc.code,
                 error_message=exc.message,
-                raw_response=str(exc.response)
+                raw_response=str(exc.response),
             )
 
         except Exception as exc:
@@ -292,10 +292,10 @@ class GeminiWrapper:
                 error_message="Empty response from Gemini",
                 raw_response=raw_text,
             )
-        
+
         try:
             parsed = _parse_json_array(raw_text)
-        except (json.JSONDecodeError, ValueError) as exc:
+        except (orjson.JSONDecodeError, ValueError) as exc:
             return None, GeminiResponse(
                 model_name=self.model,
                 status="invalid_json",
@@ -303,11 +303,10 @@ class GeminiWrapper:
                 error_message=f"Gemini response is not valid JSON: {exc}",
                 raw_response=raw_text,
             )
-            
+
         try:
             validated = [
-                GeneratedMCQ.model_validate(item) 
-                for item in cast(list[object], parsed)
+                GeneratedMCQ.model_validate(item) for item in cast(list[object], parsed)
             ]
         except ValidationError as exc:
             return None, GeminiResponse(
@@ -317,7 +316,7 @@ class GeminiWrapper:
                 error_message=f"Schema validation failed: {exc}",
                 raw_response=raw_text,
             )
-            
+
         if len(validated) != num_questions:
             return None, GeminiResponse(
                 model_name=self.model,
@@ -326,8 +325,6 @@ class GeminiWrapper:
                 error_message=f"Expected {num_questions} questions, got {len(validated)}",
                 raw_response=raw_text,
             )
-        
-        
 
         return validated, GeminiResponse(
             model_name=self.model,
@@ -336,6 +333,7 @@ class GeminiWrapper:
             error_message=None,
             raw_response=raw_text,
         )
+
 
 # a depenency function to show the gemin wrapper
 # checks if the api for two environment variable names
