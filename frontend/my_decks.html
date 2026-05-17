@@ -695,9 +695,9 @@
         <div class="avatar-wrapper" id="avatar-wrapper">
             <div class="nav-avatar" id="user-initials" onclick="document.getElementById('avatar-dropdown').classList.toggle('open');event.stopPropagation();">JD</div>
             <div class="avatar-dropdown" id="avatar-dropdown" onclick="event.stopPropagation();">
-                <a href="#">
+                <a href="settings.html">
                     <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    Account
+                    Settings
                 </a>
                 <div class="dropdown-divider"></div>
                 <button class="danger" onclick="localStorage.removeItem('token');localStorage.removeItem('userInitials');window.location.href='index.html';">
@@ -824,13 +824,13 @@
                 </button>
             </div>
             <div class="modal-note" id="generate-preview-note">
-                Preview the generated cards below. They have been added to the selected deck.
+                Preview the generated cards below. They have not been saved yet.
             </div>
             <div class="preview-list" id="generate-preview-list"></div>
             <div class="modal-error" id="generate-preview-error"></div>
             <div class="modal-footer">
-                <button class="btn" id="generate-preview-dismiss-btn">Done</button>
-                <button class="btn btn-primary" id="generate-preview-open-btn">Open Deck</button>
+                <button class="btn" id="generate-preview-dismiss-btn">Discard</button>
+                <button class="btn btn-primary" id="generate-preview-open-btn">Import Cards</button>
             </div>
         </div>
     </div>
@@ -955,6 +955,8 @@
         const generateError = document.getElementById('generate-error');
         const generateSubmitBtn = document.getElementById('generate-submit-btn');
         const generateNoDecks = document.getElementById('generate-no-decks');
+        let isGeneratingCards = false;
+        let pendingGeneratedCards = [];
 
         function escapeHtml(value) {
             return String(value ?? '').replace(/[&<>"']/g, (ch) => ({
@@ -980,6 +982,7 @@
         }
 
         function openGenerateModal() {
+            if (isGeneratingCards) return;
             populateGenerateDecks();
             generateNotes.value = '';
             document.getElementById('generate-file-input').value = '';
@@ -1034,7 +1037,7 @@
             const deck = allDecks.find(d => String(d.id) === String(generatedDeckId));
             document.getElementById('generate-preview-title').innerText = `${cards.length} Generated Flashcard${cards.length === 1 ? '' : 's'}`;
             document.getElementById('generate-preview-note').innerText =
-                `Preview the generated cards below. They have been added to ${deck ? deck.title : 'the selected deck'}.`;
+                `Preview the generated cards below. They have not been saved to ${deck ? deck.title : 'the selected deck'} yet.`;
             document.getElementById('generate-preview-list').innerHTML = cards.map((card, index) => `
                 <div class="preview-card">
                     <div class="preview-label">Card ${index + 1}</div>
@@ -1047,15 +1050,42 @@
             generatePreviewOverlay.classList.add('open');
         }
 
-        async function finishGeneratedPreview(openDeck = false) {
+        function discardGeneratedPreview() {
+            pendingGeneratedCards = [];
+            generatedDeckId = null;
+            generatePreviewOverlay.classList.remove('open');
+        }
+
+        async function importGeneratedCards() {
+            if (!generatedDeckId || !pendingGeneratedCards.length) return;
+            const importBtn = document.getElementById('generate-preview-open-btn');
+
             try {
+                importBtn.disabled = true;
+                importBtn.innerText = 'Importing...';
+                document.getElementById('generate-preview-error').innerText = '';
+
+                for (const card of pendingGeneratedCards) {
+                    const res = await fetch(`${API_BASE}/decks/${generatedDeckId}/cards`, {
+                        method: 'POST',
+                        headers: authHeaders(),
+                        body: JSON.stringify({
+                            question: card.question,
+                            answer: card.answer
+                        })
+                    });
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok) throw new Error(data.detail || `Failed to import card (${res.status})`);
+                }
+
+                pendingGeneratedCards = [];
                 await reloadDecks();
                 generatePreviewOverlay.classList.remove('open');
-                if (openDeck && generatedDeckId) {
-                    window.location.href = `deck.html?deck_id=${generatedDeckId}`;
-                }
             } catch (err) {
                 document.getElementById('generate-preview-error').innerText = err.message;
+            } finally {
+                importBtn.disabled = false;
+                importBtn.innerText = 'Import Cards';
             }
         }
 
@@ -1086,6 +1116,7 @@
         });
 
         generateSubmitBtn.addEventListener('click', async () => {
+            if (isGeneratingCards) return;
             const deckId = generateDeckSelect.value;
             const notes = generateNotes.value.trim();
             const numCards = Number(generateCount.value);
@@ -1099,32 +1130,42 @@
             }
 
             generatedDeckId = deckId;
+            pendingGeneratedCards = [];
+            isGeneratingCards = true;
+            generateSubmitBtn.disabled = true;
+            generateSubmitBtn.innerText = 'Generating...';
             generateError.innerText = '';
             closeGenerateModal();
             showLoading();
 
             try {
+                await new Promise(resolve => requestAnimationFrame(resolve));
                 const res = await fetch(`${API_BASE}/ai/generate-cards`, {
                     method: 'POST',
                     headers: authHeaders(),
-                    body: JSON.stringify({ deck_id: Number(deckId), notes, num_cards: numCards })
+                    body: JSON.stringify({ deck_id: Number(deckId), notes, num_cards: numCards, save: false })
                 });
                 const data = await res.json().catch(() => ({}));
                 if (!res.ok) throw new Error(data.detail || `Failed to generate flashcards (${res.status})`);
                 const generatedCards = normaliseGeneratedCards(data);
                 if (!generatedCards.length) throw new Error('The AI did not return any usable flashcards.');
+                pendingGeneratedCards = generatedCards;
                 hideLoading();
                 showGeneratedPreview(generatedCards);
             } catch (err) {
                 hideLoading();
                 generateOverlay.classList.add('open');
                 generateError.innerText = err.message;
+            } finally {
+                isGeneratingCards = false;
+                populateGenerateDecks();
+                generateSubmitBtn.innerText = 'Generate Flashcards';
             }
         });
 
-        document.getElementById('generate-preview-close-btn').addEventListener('click', () => finishGeneratedPreview(false));
-        document.getElementById('generate-preview-dismiss-btn').addEventListener('click', () => finishGeneratedPreview(false));
-        document.getElementById('generate-preview-open-btn').addEventListener('click', () => finishGeneratedPreview(true));
+        document.getElementById('generate-preview-close-btn').addEventListener('click', discardGeneratedPreview);
+        document.getElementById('generate-preview-dismiss-btn').addEventListener('click', discardGeneratedPreview);
+        document.getElementById('generate-preview-open-btn').addEventListener('click', importGeneratedCards);
 
         // ── Init ──
         async function init() {

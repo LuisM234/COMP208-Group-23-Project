@@ -528,10 +528,59 @@
     let flipped   = false;
     let deckTitle = 'Study Session';
     let deckSub   = '';
+    let ratingInProgress = false;
 
     function authHdr() {
       const t = localStorage.getItem('token');
       return { 'Content-Type': 'application/json', ...(t ? { 'Authorization': `Bearer ${t}` } : {}) };
+    }
+
+    const DEFAULT_TIMINGS = {
+      againSeconds: 60,
+      hardSeconds: 360,
+      goodSeconds: 600,
+      easySeconds: 345600
+    };
+
+    function getStudyTimings() {
+      try {
+        return { ...DEFAULT_TIMINGS, ...JSON.parse(localStorage.getItem('leitnerTimings') || '{}') };
+      } catch {
+        return DEFAULT_TIMINGS;
+      }
+    }
+
+    function formatDelay(seconds) {
+      if (seconds < 60) return `${seconds} sec${seconds === 1 ? '' : 's'}`;
+      if (seconds < 3600) {
+        const mins = Math.round(seconds / 60);
+        return `${mins} min${mins === 1 ? '' : 's'}`;
+      }
+      if (seconds < 86400) {
+        const hours = Math.round(seconds / 3600);
+        return `${hours} hour${hours === 1 ? '' : 's'}`;
+      }
+      const days = Math.round(seconds / 86400);
+      return `${days} day${days === 1 ? '' : 's'}`;
+    }
+
+    function ratingDelaySeconds(rating) {
+      const timings = getStudyTimings();
+      if (rating === 1) return timings.againSeconds;
+      if (rating === 2) return timings.hardSeconds;
+      if (rating === 3) return timings.goodSeconds;
+      return timings.easySeconds;
+    }
+
+    async function loadStudyCards() {
+      const endpoint = MODE === 'cram'
+        ? `${API}/decks/${DECK_ID}/cards`
+        : `${API}/decks/${DECK_ID}/due`;
+      const cr = await fetch(endpoint, { headers: authHdr() });
+      if (!cr.ok) throw new Error(`Could not load cards (${cr.status})`);
+      cards = await cr.json();
+      idx = 0;
+      flipped = false;
     }
 
     async function init() {
@@ -543,15 +592,7 @@
         if (dr.status === 401) { window.location.href = 'index.html'; return; }
         if (dr.ok) { const d = await dr.json(); deckTitle = d.title || 'Study Session'; deckSub = d.description || ''; }
 
-        const endpoint = MODE === 'cram'
-          ? `${API}/decks/${DECK_ID}/cards`
-          : `${API}/decks/${DECK_ID}/due`;
-        const cr = await fetch(endpoint, { headers: authHdr() });
-        if (cr.ok) {
-          cards = await cr.json();
-        } else {
-          throw new Error(`Could not load cards (${cr.status})`);
-        }
+        await loadStudyCards();
       } catch (err) {
         document.getElementById('app').innerHTML =
           `<div style="text-align:center;color:#dc3545;padding:60px 0">⚠️ ${err.message}<br><a href="dashboard.html" style="color:#111;margin-top:12px;display:inline-block">← Back to Dashboard</a></div>`;
@@ -570,6 +611,7 @@
     function renderCard() {
       const card = cards[idx];
       const pct  = Math.round((idx / cards.length) * 100);
+      const timings = getStudyTimings();
 
       document.getElementById('app').innerHTML = `
         <div class="session-header">
@@ -614,12 +656,12 @@
           ? `<div class="rating-section">
                <div class="rating-label">How well did you know this?</div>
                <div class="rating-grid">
-                 <button class="rate-btn" onclick="rate(1)"><span class="rate-emoji">🤯</span><span class="rate-name">Again</span><span class="rate-time">&lt;1 min</span></button>
-                 <button class="rate-btn" onclick="rate(2)"><span class="rate-emoji">😵</span><span class="rate-name">Hard</span><span class="rate-time">&lt;6 min</span></button>
-                 <button class="rate-btn" onclick="rate(3)"><span class="rate-emoji">🙂</span><span class="rate-name">Good</span><span class="rate-time">&lt;10 min</span></button>
-                 <button class="rate-btn" onclick="rate(4)"><span class="rate-emoji">😄</span><span class="rate-name">Easy</span><span class="rate-time">4 days</span></button>
+                 <button class="rate-btn" onclick="rate(1)"><span class="rate-emoji">🤯</span><span class="rate-name">Again</span><span class="rate-time">${formatDelay(timings.againSeconds)}</span></button>
+                 <button class="rate-btn" onclick="rate(2)"><span class="rate-emoji">😵</span><span class="rate-name">Hard</span><span class="rate-time">${formatDelay(timings.hardSeconds)}</span></button>
+                 <button class="rate-btn" onclick="rate(3)"><span class="rate-emoji">🙂</span><span class="rate-name">Good</span><span class="rate-time">${formatDelay(timings.goodSeconds)}</span></button>
+                 <button class="rate-btn" onclick="rate(4)"><span class="rate-emoji">😄</span><span class="rate-name">Easy</span><span class="rate-time">${formatDelay(timings.easySeconds)}</span></button>
                </div>
-               <div class="sr-note">Next review intervals based on spaced repetition algorithm</div>
+               <div class="sr-note">Next review intervals use your Settings page timings</div>
              </div>`
           : `<div class="flip-hint">Click card or press <strong>Space</strong> to reveal answer</div>`
         }
@@ -655,7 +697,7 @@
         <div class="done-card">
           <div class="done-icon">🎉</div>
           <div class="done-title">Great work!</div>
-          <div class="done-sub">You reviewed all ${cards.length} card${cards.length !== 1 ? 's' : ''}</div>
+          <div class="done-sub">You reviewed all ${cards.length} card${cards.length !== 1 ? 's' : ''}. If a card is due again, Study Again will fetch it fresh.</div>
           <div class="done-actions">
             <button class="restart-btn" onclick="restart()">Study Again</button>
             <a href="dashboard.html" class="restart-btn outline">Back to Dashboard</a>
@@ -686,22 +728,39 @@
       }
     }
 
-    function rate(n) {
+    async function rate(n) {
+      if (ratingInProgress) return;
+      ratingInProgress = true;
       const card = cards[idx];
-      fetch(`${API}/cards/${card.id}/review`, {
-        method: 'POST', headers: authHdr(),
-        body: JSON.stringify({ rating: n })
-      }).catch(() => {});
-
-      idx++;
-      flipped = false;
-      render();
+      try {
+        const res = await fetch(`${API}/cards/${card.id}/review`, {
+          method: 'POST', headers: authHdr(),
+          body: JSON.stringify({
+            rating: n,
+            next_review_delay_seconds: ratingDelaySeconds(n)
+          })
+        });
+        if (!res.ok) throw new Error(`Could not save review (${res.status})`);
+        idx++;
+        flipped = false;
+        render();
+      } catch (err) {
+        alert(err.message);
+      } finally {
+        ratingInProgress = false;
+      }
     }
 
-    function restart() {
-      idx = 0;
-      flipped = false;
-      render();
+    async function restart() {
+      document.getElementById('app').innerHTML =
+        `<div style="text-align:center;color:#aaa;padding:60px 0">Checking due cards…</div>`;
+      try {
+        await loadStudyCards();
+        render();
+      } catch (err) {
+        document.getElementById('app').innerHTML =
+          `<div style="text-align:center;color:#dc3545;padding:60px 0">⚠️ ${err.message}<br><a href="dashboard.html" style="color:#111;margin-top:12px;display:inline-block">← Back to Dashboard</a></div>`;
+      }
     }
 
     /*  Keyboard  */

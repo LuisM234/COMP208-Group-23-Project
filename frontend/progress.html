@@ -772,9 +772,9 @@
         <div class="avatar-wrapper" id="avatar-wrapper">
             <div class="nav-avatar" id="user-initials" onclick="document.getElementById('avatar-dropdown').classList.toggle('open');event.stopPropagation();">JD</div>
             <div class="avatar-dropdown" id="avatar-dropdown" onclick="event.stopPropagation();">
-                <a href="#">
+                <a href="settings.html">
                     <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    Account
+                    Settings
                 </a>
                 <div class="dropdown-divider"></div>
                 <button class="danger" onclick="localStorage.removeItem('token');localStorage.removeItem('userInitials');window.location.href='index.html';">

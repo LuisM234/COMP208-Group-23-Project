@@ -174,6 +174,8 @@ class CardReviewRequest(BaseModel):
     rating: int
     # Optional client-reported response time in milliseconds.
     response_time_ms: Optional[int] = None
+    # Optional user-selected review delay from the settings page.
+    next_review_delay_seconds: Optional[int] = None
 
 
 class CardReviewResponse(BaseModel):
@@ -201,6 +203,13 @@ async def review_card(
             status_code=400,
             detail="rating must be 1 (Again), 2 (Hard), 3 (Good), or 4 (Easy)",
         )
+    if payload.next_review_delay_seconds is not None and not (
+        1 <= payload.next_review_delay_seconds <= 60 * 60 * 24 * 365
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="next_review_delay_seconds must be between 1 second and 365 days",
+        )
 
     correct = payload.rating >= 3  # Only Good (3) and Easy (4) advance the box
 
@@ -210,6 +219,7 @@ async def review_card(
             card_id=card_id,
             correct=correct,
             response_time_ms=payload.response_time_ms,
+            next_review_delay_seconds=payload.next_review_delay_seconds,
         )
     except ValueError:
         # Card with the given id does not exist.

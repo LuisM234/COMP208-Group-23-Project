@@ -81,6 +81,11 @@ class GenerateCardsRequest(BaseModel):
         description="number of flashcards to generate",
     )
 
+    save: bool = Field(
+        default=True,
+        description="Whether to save generated flashcards immediately.",
+    )
+
     @field_validator("notes")
     @classmethod
     def validate_notes(cls, value: str | None) -> str | None:
@@ -245,7 +250,7 @@ async def generate_mcq(
 
 # defines a class, integer for int, deck_id, string for question and bool for ai generated or not. 
 class CardResponse(BaseModel):
-    id: int
+    id: int | None = None
     deck_id: int
     question: str
     answer: str
@@ -326,6 +331,26 @@ async def generate_cards(
             status_code=502,
             detail=f"Gemini API error: {response.error_message or 'Unknown error'}",
         )
+
+    if not cards_request.save:
+        generation_run.update_from_dict(
+            {
+                "model_name": response.model_name,
+                "status": "success",
+                "error_code": None,
+                "error_message": None,
+            }
+        )
+        await generation_run.save()
+        return [
+            CardResponse(
+                deck_id=deck.id,
+                question=fc.question,
+                answer=fc.answer,
+                is_ai_generated=True,
+            )
+            for fc in generated
+        ]
     
 
     # initialises and empty list for new card objects 
@@ -367,14 +392,4 @@ async def generate_cards(
         )
         for card in created_cards
     ]
-
-
-
-    
-
-
-    
-        
-
-          
-        
+ 

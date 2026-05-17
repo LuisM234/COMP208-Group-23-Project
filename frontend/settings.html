@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReviseWise - Settings</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --page-start: #e0f8f0;
+            --page-end: #d6e8ff;
+            --surface: rgba(255, 255, 255, 0.82);
+            --surface-strong: rgba(255, 255, 255, 0.94);
+            --surface-border: rgba(255, 255, 255, 0.76);
+            --border: #d8e2ee;
+            --text-primary: #111111;
+            --text-secondary: #64707f;
+            --accent: #000000;
+            --accent-hover: #2a2a2a;
+            --accent-text: #ffffff;
+            --danger: #dc3545;
+            --pill-radius: 999px;
+            --card-radius: 24px;
+            --panel-radius: 28px;
+            --shadow-soft: 0 22px 52px rgba(88, 103, 128, 0.14);
+            --shadow-card: 0 18px 38px rgba(98, 114, 138, 0.12);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'DM Sans', system-ui, sans-serif;
+            background: linear-gradient(135deg, var(--page-start) 0%, var(--page-end) 100%);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding: 14px 16px 24px;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(circle at 14% 18%, rgba(255, 255, 255, 0.55) 0, rgba(255, 255, 255, 0) 34%),
+                radial-gradient(circle at 88% 12%, rgba(255, 255, 255, 0.34) 0, rgba(255, 255, 255, 0) 28%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .top-nav {
+            min-height: 62px;
+            background: var(--surface);
+            border: 1px solid var(--surface-border);
+            border-radius: var(--panel-radius);
+            box-shadow: var(--shadow-soft);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            padding: 12px 20px;
+            z-index: 100;
+        }
+
+        .nav-logo {
+            font-size: 1.55em;
+            font-weight: 800;
+            color: var(--text-primary);
+            text-decoration: none;
+            letter-spacing: -0.04em;
+        }
+
+        .top-links {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: auto;
+        }
+
+        .top-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 16px;
+            border-radius: var(--pill-radius);
+            border: 1px solid var(--surface-border);
+            background: rgba(255, 255, 255, 0.72);
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            font-weight: 700;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+            box-shadow: 0 12px 24px rgba(108, 122, 148, 0.08);
+        }
+
+        .top-link:hover {
+            background: rgba(255, 255, 255, 0.96);
+            color: var(--text-primary);
+            transform: translateY(-1px);
+        }
+
+        .top-link.active {
+            background: var(--accent);
+            color: var(--accent-text);
+            border-color: var(--accent);
+            box-shadow: 0 14px 26px rgba(17, 17, 17, 0.18);
+        }
+
+        .nav-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: var(--accent-text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.78em;
+            font-weight: 700;
+            box-shadow: 0 12px 24px rgba(17, 17, 17, 0.18);
+        }
+
+        .main {
+            margin-top: 22px;
+            padding: 22px 8px 30px 14px;
+        }
+
+        .page-intro {
+            max-width: 780px;
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 2.35rem;
+            font-weight: 800;
+            letter-spacing: -0.05em;
+            margin-bottom: 8px;
+        }
+
+        .page-copy {
+            color: var(--text-secondary);
+            font-size: 0.96rem;
+            line-height: 1.55;
+        }
+
+        .settings-shell {
+            display: grid;
+            grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.65fr);
+            gap: 18px;
+            align-items: start;
+        }
+
+        .settings-card,
+        .preview-card {
+            background: var(--surface-strong);
+            border: 1px solid var(--surface-border);
+            border-radius: var(--card-radius);
+            box-shadow: var(--shadow-card);
+            padding: 24px;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin-bottom: 8px;
+        }
+
+        .card-copy {
+            color: var(--text-secondary);
+            font-size: 0.92rem;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .timing-list {
+            display: grid;
+            gap: 14px;
+        }
+
+        .timing-row {
+            display: grid;
+            grid-template-columns: 1fr 110px 140px;
+            gap: 12px;
+            align-items: center;
+            padding: 14px;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.58);
+        }
+
+        .timing-name {
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .timing-help {
+            margin-top: 4px;
+            color: var(--text-secondary);
+            font-size: 0.82rem;
+        }
+
+        input,
+        select {
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: var(--pill-radius);
+            background: #fff;
+            padding: 12px 14px;
+            font: inherit;
+            font-weight: 700;
+            color: var(--text-primary);
+            outline: none;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: rgba(17, 17, 17, 0.42);
+            box-shadow: 0 0 0 4px rgba(17, 17, 17, 0.06);
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            border-radius: var(--pill-radius);
+            padding: 13px 20px;
+            font: inherit;
+            font-weight: 800;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.75);
+            color: var(--text-primary);
+            box-shadow: 0 12px 24px rgba(108, 122, 148, 0.1);
+            transition: transform 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            background: #fff;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: var(--accent-text);
+            box-shadow: 0 16px 28px rgba(17, 17, 17, 0.2);
+        }
+
+        .btn-primary:hover { background: var(--accent-hover); }
+
+        .message {
+            min-height: 22px;
+            margin-top: 14px;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .message.ok { color: #087f5b; }
+        .message.err { color: var(--danger); }
+
+        .preview-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .preview-item {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: center;
+            padding: 13px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .preview-item:last-child { border-bottom: none; }
+
+        .preview-name {
+            font-weight: 800;
+        }
+
+        .preview-delay {
+            color: var(--text-secondary);
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .note-box {
+            margin-top: 18px;
+            border-radius: 20px;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.56);
+            color: var(--text-secondary);
+            font-size: 0.88rem;
+            line-height: 1.45;
+            border: 1px solid var(--surface-border);
+        }
+
+        @media (max-width: 900px) {
+            .settings-shell { grid-template-columns: 1fr; }
+
+            .top-nav {
+                align-items: flex-start;
+                flex-wrap: wrap;
+            }
+
+            .top-links {
+                order: 3;
+                width: 100%;
+                margin-left: 0;
+                overflow-x: auto;
+                padding-bottom: 2px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            body { padding: 10px; }
+            .main { padding: 12px 0 24px; }
+            .timing-row { grid-template-columns: 1fr; }
+            .actions { flex-direction: column; }
+            .btn { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="top-nav">
+        <a href="dashboard.html" class="nav-logo">ReviseWise</a>
+        <div class="top-links">
+            <a href="dashboard.html" class="top-link">Dashboard</a>
+            <a href="my_decks.html" class="top-link">My Decks</a>
+            <a href="#" class="top-link">Community</a>
+            <a href="progress.html" class="top-link">Progress</a>
+            <a href="settings.html" class="top-link active">Settings</a>
+        </div>
+        <div class="nav-avatar" id="user-initials">JD</div>
+    </nav>
+
+    <main class="main">
+        <section class="page-intro">
+            <h1 class="page-title">Settings</h1>
+            <p class="page-copy">Choose how soon cards should come back after each study rating. This keeps the study session flexible without changing the shared database schema.</p>
+        </section>
+
+        <section class="settings-shell">
+            <div class="settings-card">
+                <div class="card-title">Leitner review timings</div>
+                <p class="card-copy">These values are used by the study session buttons. For example, if you set Hard to 1 second, a hard card can reappear almost straight away.</p>
+
+                <div class="timing-list">
+                    <div class="timing-row">
+                        <div>
+                            <div class="timing-name">Again</div>
+                            <div class="timing-help">For cards you did not remember.</div>
+                        </div>
+                        <input type="number" id="again-value" min="1" step="1">
+                        <select id="again-unit">
+                            <option value="seconds">seconds</option>
+                            <option value="minutes">minutes</option>
+                            <option value="hours">hours</option>
+                            <option value="days">days</option>
+                        </select>
+                    </div>
+
+                    <div class="timing-row">
+                        <div>
+                            <div class="timing-name">Hard</div>
+                            <div class="timing-help">For cards you barely got through.</div>
+                        </div>
+                        <input type="number" id="hard-value" min="1" step="1">
+                        <select id="hard-unit">
+                            <option value="seconds">seconds</option>
+                            <option value="minutes">minutes</option>
+                            <option value="hours">hours</option>
+                            <option value="days">days</option>
+                        </select>
+                    </div>
+
+                    <div class="timing-row">
+                        <div>
+                            <div class="timing-name">Good</div>
+                            <div class="timing-help">For cards you knew reasonably well.</div>
+                        </div>
+                        <input type="number" id="good-value" min="1" step="1">
+                        <select id="good-unit">
+                            <option value="seconds">seconds</option>
+                            <option value="minutes">minutes</option>
+                            <option value="hours">hours</option>
+                            <option value="days">days</option>
+                        </select>
+                    </div>
+
+                    <div class="timing-row">
+                        <div>
+                            <div class="timing-name">Easy</div>
+                            <div class="timing-help">For cards you remembered confidently.</div>
+                        </div>
+                        <input type="number" id="easy-value" min="1" step="1">
+                        <select id="easy-unit">
+                            <option value="seconds">seconds</option>
+                            <option value="minutes">minutes</option>
+                            <option value="hours">hours</option>
+                            <option value="days">days</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button class="btn btn-primary" id="save-settings">Save timings</button>
+                    <button class="btn" id="reset-settings">Reset defaults</button>
+                </div>
+                <div class="message" id="settings-message"></div>
+            </div>
+
+            <aside class="preview-card">
+                <div class="card-title">Current study buttons</div>
+                <p class="card-copy">This is what the study session will show after saving.</p>
+                <div class="preview-list">
+                    <div class="preview-item"><span class="preview-name">Again</span><span class="preview-delay" id="preview-again">-</span></div>
+                    <div class="preview-item"><span class="preview-name">Hard</span><span class="preview-delay" id="preview-hard">-</span></div>
+                    <div class="preview-item"><span class="preview-name">Good</span><span class="preview-delay" id="preview-good">-</span></div>
+                    <div class="preview-item"><span class="preview-name">Easy</span><span class="preview-delay" id="preview-easy">-</span></div>
+                </div>
+                <div class="note-box">For this pass, settings are saved in this browser. They still affect real review scheduling because the study page sends the chosen delay to the backend when you rate a card.</div>
+            </aside>
+        </section>
+    </main>
+
+    <script>
+        const DEFAULT_TIMINGS = {
+            againSeconds: 60,
+            hardSeconds: 360,
+            goodSeconds: 600,
+            easySeconds: 345600
+        };
+
+        const UNIT_SECONDS = {
+            seconds: 1,
+            minutes: 60,
+            hours: 3600,
+            days: 86400
+        };
+
+        document.getElementById('user-initials').innerText = localStorage.getItem('userInitials') || 'JD';
+
+        function readStoredTimings() {
+            try {
+                return { ...DEFAULT_TIMINGS, ...JSON.parse(localStorage.getItem('leitnerTimings') || '{}') };
+            } catch {
+                return DEFAULT_TIMINGS;
+            }
+        }
+
+        function splitSeconds(seconds) {
+            if (seconds % UNIT_SECONDS.days === 0) return { value: seconds / UNIT_SECONDS.days, unit: 'days' };
+            if (seconds % UNIT_SECONDS.hours === 0) return { value: seconds / UNIT_SECONDS.hours, unit: 'hours' };
+            if (seconds % UNIT_SECONDS.minutes === 0) return { value: seconds / UNIT_SECONDS.minutes, unit: 'minutes' };
+            return { value: seconds, unit: 'seconds' };
+        }
+
+        function formatDelay(seconds) {
+            if (seconds < 60) return `${seconds} sec${seconds === 1 ? '' : 's'}`;
+            if (seconds < 3600) {
+                const mins = Math.round(seconds / 60);
+                return `${mins} min${mins === 1 ? '' : 's'}`;
+            }
+            if (seconds < 86400) {
+                const hours = Math.round(seconds / 3600);
+                return `${hours} hour${hours === 1 ? '' : 's'}`;
+            }
+            const days = Math.round(seconds / 86400);
+            return `${days} day${days === 1 ? '' : 's'}`;
+        }
+
+        function setRow(name, seconds) {
+            const split = splitSeconds(seconds);
+            document.getElementById(`${name}-value`).value = split.value;
+            document.getElementById(`${name}-unit`).value = split.unit;
+        }
+
+        function getRowSeconds(name) {
+            const value = Number(document.getElementById(`${name}-value`).value);
+            const unit = document.getElementById(`${name}-unit`).value;
+            if (!Number.isFinite(value) || value < 1) throw new Error('All timings need to be at least 1.');
+            const seconds = Math.round(value * UNIT_SECONDS[unit]);
+            if (seconds > 60 * 60 * 24 * 365) throw new Error('Timings cannot be longer than 365 days.');
+            return seconds;
+        }
+
+        function renderPreview(timings) {
+            document.getElementById('preview-again').innerText = formatDelay(timings.againSeconds);
+            document.getElementById('preview-hard').innerText = formatDelay(timings.hardSeconds);
+            document.getElementById('preview-good').innerText = formatDelay(timings.goodSeconds);
+            document.getElementById('preview-easy').innerText = formatDelay(timings.easySeconds);
+        }
+
+        function loadForm(timings = readStoredTimings()) {
+            setRow('again', timings.againSeconds);
+            setRow('hard', timings.hardSeconds);
+            setRow('good', timings.goodSeconds);
+            setRow('easy', timings.easySeconds);
+            renderPreview(timings);
+        }
+
+        function readFormTimings() {
+            return {
+                againSeconds: getRowSeconds('again'),
+                hardSeconds: getRowSeconds('hard'),
+                goodSeconds: getRowSeconds('good'),
+                easySeconds: getRowSeconds('easy')
+            };
+        }
+
+        function showMessage(text, type) {
+            const message = document.getElementById('settings-message');
+            message.innerText = text;
+            message.className = `message ${type}`;
+        }
+
+        ['again', 'hard', 'good', 'easy'].forEach(name => {
+            document.getElementById(`${name}-value`).addEventListener('input', () => {
+                try { renderPreview(readFormTimings()); } catch {}
+            });
+            document.getElementById(`${name}-unit`).addEventListener('change', () => {
+                try { renderPreview(readFormTimings()); } catch {}
+            });
+        });
+
+        document.getElementById('save-settings').addEventListener('click', () => {
+            try {
+                const timings = readFormTimings();
+                localStorage.setItem('leitnerTimings', JSON.stringify(timings));
+                renderPreview(timings);
+                showMessage('Saved. New study sessions will use these timings.', 'ok');
+            } catch (err) {
+                showMessage(err.message, 'err');
+            }
+        });
+
+        document.getElementById('reset-settings').addEventListener('click', () => {
+            localStorage.setItem('leitnerTimings', JSON.stringify(DEFAULT_TIMINGS));
+            loadForm(DEFAULT_TIMINGS);
+            showMessage('Defaults restored.', 'ok');
+        });
+
+        const token = localStorage.getItem('token');
+        if (!token || token === 'demo-token') window.location.href = 'index.html';
+        loadForm();
+    </script>
+</body>
+</html>

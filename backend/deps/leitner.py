@@ -385,6 +385,7 @@ async def review_card_leitner(
     correct: bool,
     as_of: datetime | None = None,
     response_time_ms: int | None = None,
+    next_review_delay_seconds: int | None = None,
 ) -> StudyProgress:
     """Record one review and advance the Leitner schedule.
 
@@ -394,6 +395,11 @@ async def review_card_leitner(
     now = as_of or utc_now()
     if response_time_ms is not None and response_time_ms < 0:
         raise ValueError("response_time_ms cannot be negative")
+    custom_delay = None
+    if next_review_delay_seconds is not None:
+        if not 1 <= next_review_delay_seconds <= 60 * 60 * 24 * 365:
+            raise ValueError("next_review_delay_seconds must be between 1 second and 365 days")
+        custom_delay = timedelta(seconds=next_review_delay_seconds)
 
     async with in_transaction() as db:
         # Load the card and verify it belongs to a deck owned by this user.
@@ -443,12 +449,12 @@ async def review_card_leitner(
         progress.last_reviewed = now
 
         if correct:
-            progress.next_review = now + BOX_INTERVALS[progress.box]
+            progress.next_review = now + (custom_delay or BOX_INTERVALS[progress.box])
             progress.streak += 1
             progress.last_result = "correct"
         else:
-            progress.next_review = now + timedelta(
-                minutes=WRONG_RELEARNING_DELAY_MINUTES
+            progress.next_review = now + (
+                custom_delay or timedelta(minutes=WRONG_RELEARNING_DELAY_MINUTES)
             )
             progress.lapse_count += 1
             progress.streak = 0
