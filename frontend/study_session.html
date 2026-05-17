@@ -529,6 +529,9 @@
     let deckTitle = 'Study Session';
     let deckSub   = '';
     let ratingInProgress = false;
+    let nextDueAt = null;
+    let dueTimer = null;
+    let dueLoadInProgress = false;
 
     function authHdr() {
       const t = localStorage.getItem('token');
@@ -564,6 +567,15 @@
       return `${days} day${days === 1 ? '' : 's'}`;
     }
 
+    function formatCountdown(ms) {
+      const seconds = Math.max(1, Math.ceil(ms / 1000));
+      if (seconds < 60) return `${seconds} sec${seconds === 1 ? '' : 's'}`;
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      if (mins < 60) return secs ? `${mins} min ${secs} sec` : `${mins} min`;
+      return formatDelay(seconds);
+    }
+
     function ratingDelaySeconds(rating) {
       const timings = getStudyTimings();
       if (rating === 1) return timings.againSeconds;
@@ -572,15 +584,77 @@
       return timings.easySeconds;
     }
 
-    async function loadStudyCards() {
+    async function fetchStudyCards() {
       const endpoint = MODE === 'cram'
         ? `${API}/decks/${DECK_ID}/cards`
         : `${API}/decks/${DECK_ID}/due`;
       const cr = await fetch(endpoint, { headers: authHdr() });
       if (!cr.ok) throw new Error(`Could not load cards (${cr.status})`);
-      cards = await cr.json();
+      return await cr.json();
+    }
+
+    async function loadStudyCards() {
+      clearDueTimer();
+      cards = await fetchStudyCards();
       idx = 0;
       flipped = false;
+      nextDueAt = null;
+    }
+
+    function clearDueTimer() {
+      if (dueTimer) {
+        clearInterval(dueTimer);
+        dueTimer = null;
+      }
+    }
+
+    function rememberNextDue(nextReview) {
+      const due = new Date(nextReview);
+      if (Number.isNaN(due.getTime())) return;
+      if (!nextDueAt || due < nextDueAt) nextDueAt = due;
+    }
+
+    function startDueWatcher() {
+      clearDueTimer();
+      if (MODE === 'cram' || !nextDueAt) return;
+
+      const update = async () => {
+        const remaining = nextDueAt.getTime() - Date.now();
+        const copy = document.getElementById('next-due-copy');
+
+        if (remaining > 0) {
+          if (copy) copy.innerText = `Next card due in ${formatCountdown(remaining)}. It will load automatically.`;
+          return;
+        }
+
+        if (dueLoadInProgress) return;
+        dueLoadInProgress = true;
+        if (copy) copy.innerText = 'Loading due cards...';
+        try {
+          const dueCards = await fetchStudyCards();
+          if (dueCards.length) {
+            clearDueTimer();
+            cards = dueCards;
+            idx = 0;
+            flipped = false;
+            nextDueAt = null;
+            render();
+            return;
+          }
+
+          nextDueAt = new Date(Date.now() + 3000);
+          if (copy) copy.innerText = 'Still checking for the next retry...';
+        } catch (err) {
+          clearDueTimer();
+          document.getElementById('app').innerHTML =
+            `<div style="text-align:center;color:#dc3545;padding:60px 0">⚠️ ${err.message}<br><a href="dashboard.html" style="color:#111;margin-top:12px;display:inline-block">← Back to Dashboard</a></div>`;
+        } finally {
+          dueLoadInProgress = false;
+        }
+      };
+
+      update();
+      dueTimer = setInterval(update, 1000);
     }
 
     async function init() {
@@ -680,8 +754,8 @@
         </div>
         <div class="done-card">
           <div class="done-icon">📚</div>
-          <div class="done-title">No cards in this deck yet</div>
-          <div class="done-sub">Add some cards first to start studying</div>
+          <div class="done-title">No due cards right now</div>
+          <div class="done-sub">This deck either has no cards yet, or everything is scheduled for later.</div>
           <div class="done-actions">
             <a href="deck.html?deck_id=${DECK_ID}" class="restart-btn outline">Go to Deck</a>
             <a href="dashboard.html" class="restart-btn outline">Dashboard</a>
@@ -690,6 +764,10 @@
     }
 
     function renderDone() {
+      const dueCopy = MODE === 'study' && nextDueAt
+        ? `<div class="done-sub" id="next-due-copy">Checking next due card...</div>`
+        : `<div class="done-sub">You reviewed all ${cards.length} card${cards.length !== 1 ? 's' : ''}</div>`;
+
       document.getElementById('app').innerHTML = `
         <div class="session-header">
           <div><div class="session-title">Session Complete!</div><div class="session-subtitle">${deckTitle}</div></div>
@@ -697,12 +775,13 @@
         <div class="done-card">
           <div class="done-icon">🎉</div>
           <div class="done-title">Great work!</div>
-          <div class="done-sub">You reviewed all ${cards.length} card${cards.length !== 1 ? 's' : ''}. If a card is due again, Study Again will fetch it fresh.</div>
+          ${dueCopy}
           <div class="done-actions">
             <button class="restart-btn" onclick="restart()">Study Again</button>
             <a href="dashboard.html" class="restart-btn outline">Back to Dashboard</a>
           </div>
         </div>`;
+      startDueWatcher();
     }
 
     /* Actions */
@@ -741,6 +820,8 @@
           })
         });
         if (!res.ok) throw new Error(`Could not save review (${res.status})`);
+        const review = await res.json().catch(() => null);
+        if (n < 3 && review?.next_review) rememberNextDue(review.next_review);
         idx++;
         flipped = false;
         render();

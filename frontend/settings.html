@@ -354,7 +354,7 @@
         <section class="settings-shell">
             <div class="settings-card">
                 <div class="card-title">Leitner review timings</div>
-                <p class="card-copy">These values are used by the study session buttons. For example, if you set Hard to 1 second, a hard card can reappear almost straight away.</p>
+                <p class="card-copy">These values are used by the study session buttons. Again should be the quickest retry, then Hard, Good and Easy should get longer from there.</p>
 
                 <div class="timing-list">
                     <div class="timing-row">
@@ -512,12 +512,22 @@
         }
 
         function readFormTimings() {
-            return {
+            const timings = {
                 againSeconds: getRowSeconds('again'),
                 hardSeconds: getRowSeconds('hard'),
                 goodSeconds: getRowSeconds('good'),
                 easySeconds: getRowSeconds('easy')
             };
+
+            if (
+                timings.againSeconds > timings.hardSeconds ||
+                timings.hardSeconds > timings.goodSeconds ||
+                timings.goodSeconds > timings.easySeconds
+            ) {
+                throw new Error('Timings must go from shortest to longest: Again, Hard, Good, then Easy.');
+            }
+
+            return timings;
         }
 
         function showMessage(text, type) {
