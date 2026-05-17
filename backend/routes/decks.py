@@ -145,15 +145,7 @@ async def get_due_cards(deck_id: int, user=Depends(get_current_user)):
     
     now = datetime.now(timezone.utc)
 
-    # Debug: check all progress rows regardless of due date
-    all_rows = await StudyProgress.filter(
-        user_id=user.id,
-        card__deck_id=deck_id,
-    ).prefetch_related("card").all()
-    
-    for r in all_rows:
-        print(f"Card {r.card.id}: box={r.box}, next_review={r.next_review}, now={now}, due={r.next_review <= now}")
-
+ 
     progress_rows = await StudyProgress.filter(
         user_id=user.id,
         card__deck_id=deck_id,
